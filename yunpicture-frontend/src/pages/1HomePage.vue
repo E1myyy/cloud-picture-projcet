@@ -1,37 +1,36 @@
 <template>
   <div id="homePage">
-    <!-- 搜索框 -->
-    <div class="search-bar">
-      <a-input-search
-        placeholder="从海量图片中搜索"
-        v-model:value="searchParams.searchText"
-        enter-button="搜索"
-        size="large"
-        @search="doSearch"
-      />
+    <!-- 搜索栏增强 -->
+    <div class="hero-section">
+      <h1 class="hero-title">数百万张免费正版素材</h1>
+      <div class="search-bar">
+        <a-input-search
+          placeholder="搜索图片、视频和音乐"
+          v-model:value="searchParams.searchText"
+          enter-button="搜索"
+          size="large"
+          class="large-search"
+          @search="doSearch"
+        />
+      </div>
     </div>
-    <!-- 分类+标签 -->
-    <a-tabs v-model:active-key="selectedCategory" @change="doSearch">
-      <a-tab-pane key="all" tab="全部"></a-tab-pane>
-      <a-tab-pane v-for="category in categoryList" :key="category" :tab="category"></a-tab-pane>
-    </a-tabs>
-    <div class="tag-bar">
-      <span style="margin-right: 8px">标签:</span>
-      <a-space :size="[0, 8]" wrap>
-        <a-checkable-tag
-          v-for="(tag, index) in tagList"
-          :key="tag"
-          v-model:checked="selectedTagList[index]"
-          @change="doSearch"
-        >
-          {{ tag }}
-        </a-checkable-tag>
-      </a-space>
-    </div>
-    <!-- 图片列表 -->
+
+    <!-- 分类导航增强 -->
+    <nav class="category-nav">
+      <a-button
+        v-for="category in ['全部', ...categoryList]"
+        :key="category"
+        :type="selectedCategory === category.toLowerCase() ? 'primary' : 'text'"
+        @click="changeCategory(category.toLowerCase())"
+      >
+        {{ category }}
+      </a-button>
+    </nav>
+
+    <!-- 图片列表增强 -->
     <div class="gallery-container">
       <a-watermark
-        content="EyPicture"
+        content="Pixabay"
         :font="{ color: 'rgba(0,0,0,0.12)', fontSize: 24 }"
       >
         <div class="masonry-grid">
@@ -43,9 +42,8 @@
           >
             <img :src="picture.url" :alt="picture.name"/>
             <div class="hover-overlay">
-<!--              下载按钮-->
               <div class="action-bar">
-                <a-button shape="circle" type="primary" @click.stop="doDownload(picture.url)">
+                <a-button shape="circle" type="primary">
                   <template #icon><DownloadOutlined /></template>
                 </a-button>
                 <a-button shape="circle">
@@ -54,7 +52,7 @@
               </div>
               <div class="info-footer">
                 <a-tag color="green">{{ picture.category || '默认' }}</a-tag>
-                <span class="author">@{{ picture.user.userName }}</span>
+                <span class="author">@{{ picture.author }}</span>
               </div>
             </div>
           </div>
@@ -62,28 +60,19 @@
       </a-watermark>
     </div>
   </div>
-
 </template>
+
 
 <script setup lang="ts">
 import {computed, onMounted, reactive, ref} from "vue";
 import {message} from "ant-design-vue";
 import {listPictureTagCategoryUsingGet, listPictureVoByPageUsingPost} from "@/api/pictureController.ts";
 import {useRouter} from "vue-router";
-import { DownloadOutlined, HeartOutlined } from '@ant-design/icons-vue'
-import { downloadImage } from '@/utils'
 
 // 数据
 const dataList = ref<API.PictureVO>([])
 const total = ref(0)
 const loading = ref(true)
-const picture = ref<API.PictureVO>({})
-
-// 下载图片
-// 处理下载
-const doDownload = (url:string) => {
-  downloadImage(url)
-}
 
 //搜索功能
 const doSearch = () => {
@@ -179,27 +168,7 @@ onMounted(() => {
 
 </script>
 
-<style scoped>
-
-#homePage .search-bar {
-  max-width: 480px;
-  margin: 0 auto 8px;
-}
-
-#homePage .tag-bar{
-  margin-bottom: 16px;
-}
-
-/* 覆盖分类栏（Tabs）字体大小 */
-#homePage :deep(.ant-tabs-tab) {
-  font-size: 16px !important; /* 调整分类栏字体大小 */
-}
-
-/* 覆盖标签栏（Tags）字体大小 */
-#homePage :deep(.ant-tag) {
-  font-size: 14px !important; /* 调整标签栏字体大小 */
-}
-
+<style scoped>/* 新增样式 */
 .hero-section {
   text-align: center;
   padding: 64px 24px;
@@ -300,5 +269,4 @@ onMounted(() => {
   .hero-title { font-size: 1.8rem; }
   .masonry-grid { column-count: 2; }
 }
-
 </style>

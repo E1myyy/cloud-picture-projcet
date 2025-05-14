@@ -6,7 +6,6 @@ import com.eimy.yunpicturebackend.model.entity.User;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.eimy.yunpicturebackend.model.vo.LoginUserVO;
 import com.eimy.yunpicturebackend.model.vo.UserVO;
-import org.springframework.beans.BeanUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -84,5 +83,14 @@ public interface UserService extends IService<User> {
      * @return
      */
     QueryWrapper<User> getQueryWrapper(UserQueryRequest userQueryRequest);
+
+    /**
+     * 是否为管理员
+     *
+     * @param user
+     * @return
+     */
+    boolean isAdmin(User user);
+
 
 }

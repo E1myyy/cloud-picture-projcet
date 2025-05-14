@@ -21,7 +21,7 @@ import GlobalHeader from "@/components/GlobalHeader.vue";
 #basicLayout .header {
   background: white;
   color: unset;
-  margin-bottom: 20px;
+  margin-bottom: 0;
 }
 #basicLayout .content {
   padding: 20px;

@@ -23,7 +23,9 @@
             <a-dropdown>
               <a-space>
                 <a-avatar :src="loginUserStore.loginUser.userAvatar" />
-                {{ loginUserStore.loginUser.userName ?? '无名' }}
+                <div class="user-name">
+                  {{ loginUserStore.loginUser.userName ?? '无名' }}
+                </div>
               </a-space>
               <template #overlay>
                 <a-menu>
@@ -36,6 +38,13 @@
                     >
                     <router-link to="/admin/userManage">
                       用户管理
+                    </router-link>
+                  </a-menu-item>
+                  <a-menu-item
+                    v-if="loginUserStore.loginUser.userRole === 'admin'"
+                  >
+                    <router-link to="/admin/pictureManage">
+                      图片管理
                     </router-link>
                   </a-menu-item>
                 </a-menu>
@@ -100,9 +109,19 @@ const originItems = [
     title: '主页',
   },
   {
+    key: '/add_picture',
+    label: '创建图片',
+    title: '创建图片',
+  },
+  {
     key: '/admin/userManage',
     label: '用户管理',
     title: '用户管理',
+  },
+  {
+    key: '/admin/pictureManage',
+    label: '图片管理',
+    title: '图片管理',
   },
   {
     key: 'others',
@@ -131,12 +150,6 @@ const filterMenus = (menus: MenuProps['items'] = []) => {
 const items = computed<MenuProps['items']>(() => filterMenus(originItems))
 
 
-
-
-const jumpToUserManagePage = async() => {
-  await router.push('/admin/userManage')
-}
-
 const onMenuClick = (e: MenuInfo) => {
   router.push({
     path: e.key
@@ -151,6 +164,16 @@ const loginUserStore = useLoginUserStore()
 </script>
 
 <style scoped>
+/* 新增用户名容器样式 */
+.user-login-status .user-name {
+  max-width: 100px;  /* 根据实际布局调整 */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-block;
+  vertical-align: middle;
+}
+
 .title-bar {
   display: flex;
   align-items: center;
