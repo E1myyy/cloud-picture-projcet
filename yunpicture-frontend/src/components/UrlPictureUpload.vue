@@ -1,26 +1,19 @@
 <template>
-  <div class="picture-upload">
-    <a-upload
-      list-type="picture-card"
-      :show-upload-list="false"
-      :custom-request="handleUpload"
-      :before-upload="beforeUpload"
-    >
+  <div class="url-picture-upload">
+    <a-input-group compact style="margin-bottom: 16px" :before-upload="beforeUpload">
+      <a-input v-model:value="fileUrl" style="width: calc(100% - 120px)" placeholder="请输入图片 URL" />
+      <a-button type="primary" :loading="loading" @click="handleUpload" style="width: 120px">提交</a-button>
+    </a-input-group>
+    <div class="image-wraper">
       <img v-if="picture?.url" :src="picture?.url" alt="avatar" />
-      <div v-else>
-        <loading-outlined v-if="loading"></loading-outlined>
-        <plus-outlined v-else></plus-outlined>
-        <div class="ant-upload-text">点击或拖拽上传图片</div>
-      </div>
-    </a-upload>
+    </div>
   </div>
 </template>
 <script lang="ts" setup>
 import { ref } from 'vue';
-import { PlusOutlined, LoadingOutlined } from '@ant-design/icons-vue';
 import { message } from 'ant-design-vue';
-import type { UploadProps } from 'ant-design-vue';
-import {uploadPictureUsingPost} from "@/api/pictureController.ts";
+import type {UploadProps } from 'ant-design-vue';
+import {uploadPictureByUrlUsingPost} from "@/api/pictureController.ts";
 
 interface Props {
   picture?: API.PictureVO
@@ -28,18 +21,19 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-
 const loading = ref<boolean>(false)
-
+const fileUrl = ref<string>()
 /**
  * 上传
- * @param file
  */
-const handleUpload = async ({ file }: any) => {
+const handleUpload = async () => {
   loading.value = true
   try {
-    const params = props.picture ? { id: props.picture.id } : {};
-    const res = await uploadPictureUsingPost(params, {}, file)
+    const params: API.PictureUploadRequest = { fileUrl: fileUrl.value }
+    if (props.picture) {
+      params.id = props.picture.id
+    }
+    const res = await uploadPictureByUrlUsingPost(params)
     if (res.data.code === 0 && res.data.data) {
       message.success('图片上传成功')
       // 将上传成功的图片信息传递给父组件
@@ -53,6 +47,7 @@ const handleUpload = async ({ file }: any) => {
     loading.value = false
   }
 }
+
 
 
 const beforeUpload = (file: UploadProps['fileList'][number]) => {
@@ -70,24 +65,19 @@ const beforeUpload = (file: UploadProps['fileList'][number]) => {
   };
 </script>
 <style scoped>
-.picture-upload :deep(.ant-upload){
-  width: 100% !important;
-  height: 100% !important;
-  min-width: 152px;
-  min-height: 152px;
+/* 新增图片预览样式 */
+
+.url-picture-upload :deep(.ant-upload){
+  margin-bottom: 16px;
 }
 
-.picture-upload img {
+.url-picture-upload img {
   max-width: 100%;
   max-height: 480px;
 }
-.ant-upload-select-picture-card i {
-  font-size: 32px;
-  color: #999;
+.url-picture-upload .image-wraper{
+  text-align: center;
+  margin-top: 16px;
 }
 
-.ant-upload-select-picture-card .ant-upload-text {
-  margin-top: 8px;
-  color: #666;
-}
 </style>

@@ -47,32 +47,75 @@
               {{ formatSize(picture.picSize) }}
             </a-descriptions-item>
           </a-descriptions>
-          <a-space>
-            <a-button type="primary" @click="doDownload">
-              免费下载
-              <template #icon>
-                <DownloadOutlined />
-              </template>
-            </a-button>
-            <a-button :icon="h(EditOutlined)" type="default" @click="doEdit" target="_blank"
-            >编辑</a-button
-            >
-            <a-button :icon="h(DeleteOutlined)" danger @click="doDelete">删除</a-button>
-          </a-space>
-        </a-card>
+          <!--审核按钮行-->
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            <a-space v-if="checkEditPermission(picture.userId)">
+              <a-button
+                v-if="picture.reviewStatus !== PIC_REVIEW_STATUS_ENUM.PASS"
+                :icon="h(CheckCircleOutlined)"
+                type="default"
+                @click="handleReview(picture ,PIC_REVIEW_STATUS_ENUM.PASS)"
+              >
+                审核通过
+              </a-button>
+              <a-button
+                v-if="picture.reviewStatus !== PIC_REVIEW_STATUS_ENUM.REJECT"
+                :icon="h(CloseCircleOutlined)"
+                type="default"
+                danger
+                @click="handleReview(picture, PIC_REVIEW_STATUS_ENUM.REJECT)"
+              >
+                审核不通过
+              </a-button>
+            </a-space>
+            <!-- 编辑和删除按钮行 -->
+            <a-space>
+              <a-button
+                v-if="picture.userId && checkEditPermission(picture.userId)"
+                :icon="h(EditOutlined)"
+                type="default"
+                @click="doEdit"
+              >编辑</a-button>
+              <a-popconfirm v-if="picture.userId && checkEditPermission(picture.userId)"
+                title="确定删除当前图片？"
+                ok-text="是"
+                cancel-text="否"
+                @confirm="doDelete"
+              >
+                <a-button type="link" danger :icon="h(DeleteOutlined)">删除</a-button>
+              </a-popconfirm>
+            </a-space>
 
+            <!-- 下载按钮行 -->
+            <a-space>
+              <a-button type="primary" @click="doDownload">
+                免费下载
+                <template #icon>
+                  <DownloadOutlined />
+                </template>
+              </a-button>
+            </a-space>
+          </div>
+        </a-card>
       </a-col>
     </a-row>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, h, ref } from 'vue'
+import {onMounted, h, ref, reactive} from 'vue'
 import { message } from 'ant-design-vue'
-import { deletePictureUsingPost, getPictureVoByIdUsingGet } from '@/api/pictureController.ts'
+import {
+  deletePictureUsingPost,
+  doPictureReviewUsingPost,
+  getPictureVoByIdUsingGet,
+  listPictureByPageUsingPost
+} from '@/api/pictureController.ts'
 import { downloadImage, formatSize } from '@/utils'
-import { EditOutlined, DeleteOutlined } from '@ant-design/icons-vue'
+import { EditOutlined, DeleteOutlined, CheckCircleOutlined, CloseCircleOutlined} from '@ant-design/icons-vue'
 import { useRouter } from 'vue-router'
+import { useLoginUserStore } from '@/stores/useLoginUserStore.ts'
+import {PIC_REVIEW_STATUS_ENUM} from "@/constants/picture.ts";
 
 interface Props {
   id: string | number
@@ -81,11 +124,62 @@ interface Props {
 const props = defineProps<Props>()
 const picture = ref<API.PictureVO>({})
 
+//审核操作
+const handleReview = async (picture: API.PictureVO, reviewStatus: number) => {
+  const reviewMessage = reviewStatus === PIC_REVIEW_STATUS_ENUM.PASS ? '管理员操作通过' : '管理员操作拒绝'
+  const res = await doPictureReviewUsingPost({
+    id: picture.id,
+    reviewStatus,
+    reviewMessage,
+  })
+  if (res.data.code === 0) {
+    message.success('审核操作成功')
+    // 重新获取列表
+    fetchData()
+  } else {
+    message.error('审核操作失败，' + res.data.message)
+  }
+}
+// 数据
+const dataList = ref<API.PictureVO[]>([])
+const total = ref(0)
+
+// 搜索条件
+// 确保分页参数命名正确
+const searchParams = reactive<API.PictureQueryRequest>({
+  current: 1,
+  pageSize: 10,
+  sortField: 'createTime',
+  sortOrder: 'ascend',
+})
+// 获取数据
+const fetchData = async () => {
+  const res = await listPictureByPageUsingPost({
+    ...searchParams,
+  })
+  if (res.data.data) {
+    dataList.value = res.data.data.records ?? []
+    total.value = res.data.data.total ?? 0
+  } else {
+    message.error('获取数据失败，' + res.data.message)
+  }
+}
+
+// 权限校验
+const loginUserStore = useLoginUserStore()
+const checkEditPermission = (userId: number) => {
+  const currentUser = loginUserStore.loginUser
+  return (
+    currentUser?.id === userId ||
+    currentUser?.userRole === 'admin'
+  )
+}
+
 // 获取数据
 const fetchPictureDetail = async () => {
   try {
     const res = await getPictureVoByIdUsingGet({
-      id: props.id,
+      id: props.id
     })
     if (res.data.code == 0 && res.data.data) {
       picture.value = res.data.data
