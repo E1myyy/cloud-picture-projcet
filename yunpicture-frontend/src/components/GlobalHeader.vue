@@ -29,24 +29,37 @@
               </a-space>
               <template #overlay>
                 <a-menu>
+                  <a-menu-item
+                    v-if="loginUserStore.loginUser.userRole === 'admin'"
+                  >
+                    <router-link to="/admin/manage">
+                      管理页面
+                    </router-link>
+                  </a-menu-item>
+                  <a-menu-item>
+                    <router-link to="/my_space">
+                      <UserOutlined />
+                      我的空间
+                    </router-link>
+                  </a-menu-item>
                   <a-menu-item @click="doLogout">
                     <LogoutOutlined />
                     退出登录
                   </a-menu-item>
-                  <a-menu-item
-                    v-if="loginUserStore.loginUser.userRole === 'admin'"
-                    >
-                    <router-link to="/admin/userManage">
-                      用户管理
-                    </router-link>
-                  </a-menu-item>
-                  <a-menu-item
-                    v-if="loginUserStore.loginUser.userRole === 'admin'"
-                  >
-                    <router-link to="/admin/pictureManage">
-                      图片管理
-                    </router-link>
-                  </a-menu-item>
+                  <!--                  <a-menu-item-->
+<!--                    v-if="loginUserStore.loginUser.userRole === 'admin'"-->
+<!--                    >-->
+<!--                    <router-link to="/admin/userManage">-->
+<!--                      用户管理-->
+<!--                    </router-link>-->
+<!--                  </a-menu-item>-->
+<!--                  <a-menu-item-->
+<!--                    v-if="loginUserStore.loginUser.userRole === 'admin'"-->
+<!--                  >-->
+<!--                    <router-link to="/admin/pictureManage">-->
+<!--                      图片管理-->
+<!--                    </router-link>-->
+<!--                  </a-menu-item>-->
                 </a-menu>
               </template>
             </a-dropdown>
@@ -68,7 +81,8 @@ import { useRouter } from 'vue-router'
 import { useLoginUserStore } from '@/stores/useLoginUserStore.ts'
 import {userLogOutUsingPost} from '@/api/userController.ts'
 import { computed } from 'vue' // 新增computed
-import type { MenuInfo } from 'ant-design-vue/es/menu/src/interface' // 引入类型
+import type { MenuInfo } from 'ant-design-vue/es/menu/src/interface'
+import AddSpacePage from "@/pages/AddSpacePage.vue"; // 引入类型
 // const doLogout = async () => {
 //   const res = await userLogOutUsingPost()
 //   console.log(res)
@@ -110,18 +124,33 @@ const originItems = [
   },
   {
     key: '/add_picture',
-    label: '创建图片',
-    title: '创建图片',
+    label: '上传图片',
+    title: '上传图片',
+  },
+  // {
+  //   key: '/admin/userManage',
+  //   label: '用户管理',
+  //   title: '用户管理',
+  // },
+  // {
+  //   key: '/admin/pictureManage',
+  //   label: '图片管理',
+  //   title: '图片管理',
+  // },
+  // {
+  //   key: '/admin/spaceManage',
+  //   label: '空间管理',
+  //   title: '空间管理',
+  // },
+  {
+    key: '/admin/manage',
+    label: '管理页面',
+    title: '管理页面',
   },
   {
-    key: '/admin/userManage',
-    label: '用户管理',
-    title: '用户管理',
-  },
-  {
-    key: '/admin/pictureManage',
-    label: '图片管理',
-    title: '图片管理',
+    key: '/add_space',
+    label: '创建空间',
+    title: '创建空间',
   },
   {
     key: 'others',

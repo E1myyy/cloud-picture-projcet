@@ -1,10 +1,9 @@
 package com.eimy.yunpicturebackend.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.eimy.yunpicturebackend.annotation.Authcheck;
+import com.eimy.yunpicturebackend.annotation.AuthCheck;
 import com.eimy.yunpicturebackend.common.BaseResponse;
 import com.eimy.yunpicturebackend.common.DeleteRequest;
-import com.eimy.yunpicturebackend.common.PageRequest;
 import com.eimy.yunpicturebackend.common.ResultUtils;
 import com.eimy.yunpicturebackend.constant.UserConstant;
 import com.eimy.yunpicturebackend.exception.BusinessException;
@@ -15,7 +14,6 @@ import com.eimy.yunpicturebackend.model.entity.User;
 import com.eimy.yunpicturebackend.model.vo.LoginUserVO;
 import com.eimy.yunpicturebackend.model.vo.UserVO;
 import com.eimy.yunpicturebackend.service.UserService;
-import org.aspectj.lang.annotation.Around;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -67,7 +65,7 @@ public class UserController {
      * 创建用户
      */
     @PostMapping("/add")
-    @Authcheck(mustRole = UserConstant.ADMIN_ROLE)
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<Long> userAdd(@RequestBody UserAddRequest userAddRequest) {
         ThrowUtils.throwIf(userAddRequest == null, ErrorCode.PARAMS_ERROR);
         User user = new User();
@@ -88,7 +86,7 @@ public class UserController {
      * @return
      */
     @PostMapping("/get/vo")
-    @Authcheck(mustRole = UserConstant.ADMIN_ROLE)
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<User> getUserByid(long id) {
         ThrowUtils.throwIf(id <= 0, ErrorCode.PARAMS_ERROR);
         User user = userService.getById(id);
@@ -102,7 +100,7 @@ public class UserController {
      * @return
      */
     @PostMapping("/delete")
-    @Authcheck(mustRole = UserConstant.ADMIN_ROLE)
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<Boolean> deleteUser(@RequestBody DeleteRequest deleteRequest){
         if(deleteRequest == null|| deleteRequest.getId() <= 0){
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
@@ -117,7 +115,7 @@ public class UserController {
      * @return
      */
     @PostMapping("/update")
-    @Authcheck(mustRole = UserConstant.ADMIN_ROLE)
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<Boolean> updateUser(@RequestBody UserUpdateRequest userUpdateRequest){
         if(userUpdateRequest == null|| userUpdateRequest.getId() <= 0){
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
@@ -134,7 +132,7 @@ public class UserController {
      * @param userQueryRequest 查询请求参数
      */
     @PostMapping("/list/page/vo")
-    @Authcheck(mustRole = UserConstant.ADMIN_ROLE)
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<Page<UserVO>> listUserVOByPage(@RequestBody UserQueryRequest userQueryRequest){
         ThrowUtils.throwIf(userQueryRequest == null, ErrorCode.PARAMS_ERROR);
         long current = userQueryRequest.getCurrent();

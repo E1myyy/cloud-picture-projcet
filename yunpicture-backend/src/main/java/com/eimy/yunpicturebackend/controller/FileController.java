@@ -1,6 +1,6 @@
 package com.eimy.yunpicturebackend.controller;
 
-import com.eimy.yunpicturebackend.annotation.Authcheck;
+import com.eimy.yunpicturebackend.annotation.AuthCheck;
 import com.eimy.yunpicturebackend.common.BaseResponse;
 import com.eimy.yunpicturebackend.common.ResultUtils;
 import com.eimy.yunpicturebackend.constant.UserConstant;
@@ -32,7 +32,7 @@ public class FileController {
      * @param multipartFile 上传的文件
      * @return
      */
-    @Authcheck(mustRole = UserConstant.ADMIN_ROLE)
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     @PostMapping("/test/upload")
     public BaseResponse<String> testUploadFile(@RequestPart("file") MultipartFile multipartFile) {
         // 文件目录
@@ -68,7 +68,7 @@ public class FileController {
      * @param filepath 文件路径
      * @param response 响应对象
      */
-    @Authcheck(mustRole = UserConstant.ADMIN_ROLE)
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     @GetMapping("/test/download/")
     public void testDownloadFile(String filepath, HttpServletResponse response) throws IOException {
         COSObjectInputStream cosObjectInput = null;

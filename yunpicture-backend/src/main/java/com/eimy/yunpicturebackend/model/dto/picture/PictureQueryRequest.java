@@ -6,9 +6,12 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.io.Serializable;
+import java.util.Date;
 import java.util.List;
 
-//图片查询请求，需要继承公共包中的 PageRequest 来支持分页查询：
+/**
+ * 图片查询请求
+ */
 @EqualsAndHashCode(callSuper = true)
 @Data
 public class PictureQueryRequest extends PageRequest implements Serializable {
@@ -74,7 +77,7 @@ public class PictureQueryRequest extends PageRequest implements Serializable {
     private Long userId;
 
     /**
-     * 状态：0-待审核; 1-通过; 2-拒绝
+     * 审核状态：0-待审核; 1-通过; 2-拒绝
      */
     private Integer reviewStatus;
 
@@ -84,10 +87,24 @@ public class PictureQueryRequest extends PageRequest implements Serializable {
     private String reviewMessage;
 
     /**
-     * 审核人 id
+     * 审核人 ID
      */
     private Long reviewerId;
 
+    /**
+     * 审核时间
+     */
+    private Date reviewTime;
+
+    /**
+     * 空间 id
+     */
+    private Long spaceId;
+
+    /**
+     * 是否只查询 spaceId 为 null 的数据
+     */
+    private boolean nullSpaceId;
 
     private static final long serialVersionUID = 1L;
 }

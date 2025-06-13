@@ -1,0 +1,174 @@
+<template>
+  <div id="spaceDetailPage" class="gradient-background">
+    <a-card class="space-card">
+      <!-- 空间信息 -->
+      <a-flex justify="space-between" align="center">
+        <div>
+          <h2>{{ space.spaceName }}（私有空间）</h2>
+          <div class="space-info">
+            <span>空间级别：{{ SPACE_LEVEL_MAP[space.spaceLevel] }}</span>
+            <span>创建时间：{{ dayjs(space.createTime).format('YYYY-MM-DD') }}</span>
+          </div>
+        </div>
+        <a-space size="middle">
+          <a-button
+            type="primary"
+            :href="`/add_picture?spaceId=${id}`"
+            target="_blank"
+            class="action-button"
+          >
+            <template #icon><PlusOutlined /></template>
+            创建图片
+          </a-button>
+          <a-tooltip
+            :title="`占用空间 ${formatSize(space.totalSize)} / ${formatSize(space.maxSize)}`"
+          >
+            <a-progress
+              type="circle"
+              :size="60"
+              :percent="((space.totalSize * 100) / space.maxSize).toFixed(1)"
+              stroke-color="#1890ff"
+            />
+          </a-tooltip>
+        </a-space>
+      </a-flex>
+
+      <a-divider style="margin: 24px 0" />
+
+      <!-- 图片列表 -->
+      <PictureList :dataList="dataList" :loading="loading" :showOp="true" :onReload="fetchData" />
+
+      <!-- 分页 -->
+      <a-pagination
+        class="pagination"
+        v-model:current="searchParams.current"
+        v-model:pageSize="searchParams.pageSize"
+        :total="total"
+        @change="onPageChange"
+      />
+    </a-card>
+  </div>
+</template>
+<script setup lang="ts">
+import { SPACE_LEVEL_MAP } from '@/constants/space.ts'
+import dayjs from 'dayjs'
+import { PlusOutlined } from '@ant-design/icons-vue'
+import { onMounted, reactive, ref } from 'vue'
+import { getSpaceVoByIdUsingGet } from '@/api/spaceController.ts'
+import { message } from 'ant-design-vue'
+import { listPictureVoByPageUsingPost } from '@/api/pictureController.ts'
+import { formatSize } from '@/utils'
+import PictureList from '@/components/PictureList.vue'
+
+interface Props {
+  id: string | number
+}
+
+const props = defineProps<Props>()
+const space = ref<API.SpaceVO>({})
+
+// -------- 获取空间详情 --------
+const fetchSpaceDetail = async () => {
+  try {
+    const res = await getSpaceVoByIdUsingGet({
+      id: props.id,
+    })
+    if (res.data.code === 0 && res.data.data) {
+      space.value = res.data.data
+    } else {
+      message.error('获取空间详情失败，' + res.data.message)
+    }
+  } catch (e: any) {
+    message.error('获取空间详情失败：' + e.message)
+  }
+}
+
+onMounted(() => {
+  fetchSpaceDetail()
+})
+
+// --------- 获取图片列表 --------
+
+// 定义数据
+const dataList = ref<API.PictureVO[]>([])
+const total = ref(0)
+const loading = ref(true)
+
+// 搜索条件
+const searchParams = reactive<API.PictureQueryRequest>({
+  current: 1,
+  pageSize: 12,
+  sortField: 'createTime',
+  sortOrder: 'descend',
+})
+
+// 获取数据
+const fetchData = async () => {
+  loading.value = true
+  // 转换搜索参数
+  const params = {
+    spaceId: props.id,
+    ...searchParams,
+  }
+  const res = await listPictureVoByPageUsingPost(params)
+  if (res.data.code === 0 && res.data.data) {
+    dataList.value = res.data.data.records ?? []
+    total.value = res.data.data.total ?? 0
+  } else {
+    message.error('获取数据失败，' + res.data.message)
+  }
+  loading.value = false
+}
+
+// 页面加载时获取数据，请求一次
+onMounted(() => {
+  fetchData()
+})
+
+// 分页参数
+const onPageChange = (page: number, pageSize: number) => {
+  searchParams.current = page
+  searchParams.pageSize = pageSize
+  fetchData()
+}
+</script>
+
+<style scoped>
+#spaceDetailPage {
+  min-height: 100vh;
+  padding: 24px;
+  background: linear-gradient(135deg, #e0f7fa 0%, #bbdefb 100%);
+}
+
+.space-card {
+  max-width: 1200px;
+  margin: 0 auto;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  padding: 24px;
+}
+
+.space-info {
+  margin-top: 8px;
+  color: #666;
+  font-size: 14px;
+}
+
+.space-info span {
+  margin-right: 16px;
+}
+
+.action-button {
+  background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+  height: 40px;
+}
+
+.pagination {
+  margin-top: 24px;
+  display: flex;
+  justify-content: center;
+}
+</style>

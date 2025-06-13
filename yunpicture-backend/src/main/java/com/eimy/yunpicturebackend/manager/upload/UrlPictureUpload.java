@@ -10,7 +10,6 @@ import com.eimy.yunpicturebackend.exception.BusinessException;
 import com.eimy.yunpicturebackend.exception.ErrorCode;
 import com.eimy.yunpicturebackend.exception.ThrowUtils;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.net.MalformedURLException;
@@ -52,8 +51,8 @@ public class UrlPictureUpload extends PictureUploadTemplate {
             if (StrUtil.isNotBlank(contentLengthStr)) {
                 try {
                     long contentLength = Long.parseLong(contentLengthStr);
-                    final long TWO_MB = 1024 * 1024 * 2;
-                    ThrowUtils.throwIf(contentLength > TWO_MB, ErrorCode.PARAMS_ERROR, "文件大小不能超过2MB");
+                    final long T_MB = 1024 * 1024 * 3;
+                    ThrowUtils.throwIf(contentLength > T_MB, ErrorCode.PARAMS_ERROR, "文件大小不能超过3MB");
                 } catch (NumberFormatException e) {
                     throw new BusinessException(ErrorCode.PARAMS_ERROR, "文件大小格式错误");
                 }

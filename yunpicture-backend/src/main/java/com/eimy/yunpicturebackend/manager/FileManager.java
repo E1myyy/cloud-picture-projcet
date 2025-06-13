@@ -10,7 +10,6 @@ import cn.hutool.http.HttpResponse;
 import cn.hutool.http.HttpStatus;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.http.Method;
-import com.eimy.yunpicturebackend.common.ResultUtils;
 import com.eimy.yunpicturebackend.config.CosClientConfig;
 import com.eimy.yunpicturebackend.exception.BusinessException;
 import com.eimy.yunpicturebackend.exception.ErrorCode;
@@ -145,7 +144,7 @@ import java.util.List;
         // 1. 校验文件大小
         long fileSize = multipartFile.getSize();
         final long ONE_M = 1024 * 1024L;
-        ThrowUtils.throwIf(fileSize > 2 * ONE_M, ErrorCode.PARAMS_ERROR, "文件大小不能超过 2M");
+        ThrowUtils.throwIf(fileSize > 3 * ONE_M, ErrorCode.PARAMS_ERROR, "文件大小不能超过 3M");
         // 2. 校验文件后缀
         String fileSuffix = FileUtil.getSuffix(multipartFile.getOriginalFilename());
         // 允许上传的文件后缀
@@ -183,8 +182,8 @@ import java.util.List;
             if(StrUtil.isNotBlank(contentLengthStr)){
                 try{
                     long contentLength = Long.parseLong(contentLengthStr);
-                    final long TWO_MB = 1024 * 1024 * 2;
-                    ThrowUtils.throwIf(contentLength > TWO_MB,ErrorCode.PARAMS_ERROR,"文件大小不能超过2MB");
+                    final long T_MB = 1024 * 1024 * 3;
+                    ThrowUtils.throwIf(contentLength > T_MB,ErrorCode.PARAMS_ERROR,"文件大小不能超过3MB");
                 }catch (NumberFormatException e){
                     throw new BusinessException(ErrorCode.PARAMS_ERROR,"文件大小格式错误");
                 }

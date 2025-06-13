@@ -8,7 +8,7 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Authcheck {
+public @interface AuthCheck {
     /**必须有某个角色的权限才能访问
      *
      */

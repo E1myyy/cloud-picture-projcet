@@ -2,6 +2,7 @@ package com.eimy.yunpicturebackend.model.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 
+import java.io.Serializable;
 import java.util.Date;
 import lombok.Data;
 
@@ -11,7 +12,7 @@ import lombok.Data;
  */
 @TableName(value ="picture")
 @Data
-public class Picture {
+public class Picture implements Serializable {
     /**
      * id
      */
@@ -22,6 +23,11 @@ public class Picture {
      * 图片 url
      */
     private String url;
+
+    /**
+     * 缩略图 url
+     */
+    private String thumbnailUrl;
 
     /**
      * 图片名称
@@ -74,6 +80,11 @@ public class Picture {
     private Long userId;
 
     /**
+     * 空间 id
+     */
+    private Long spaceId;
+
+    /**
      * 审核状态：0-待审核; 1-通过; 2-拒绝
      */
     private Integer reviewStatus;
@@ -111,6 +122,9 @@ public class Picture {
     /**
      * 是否删除
      */
-    @TableField(exist = false)
+    @TableLogic
     private Integer isDelete;
+
+    @TableField(exist = false)
+    private static final long serialVersionUID = 1L;
 }

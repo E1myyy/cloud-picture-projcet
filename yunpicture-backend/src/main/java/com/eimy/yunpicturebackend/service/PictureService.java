@@ -2,15 +2,12 @@ package com.eimy.yunpicturebackend.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.eimy.yunpicturebackend.model.dto.picture.PictureQueryRequest;
-import com.eimy.yunpicturebackend.model.dto.picture.PictureReviewRequest;
-import com.eimy.yunpicturebackend.model.dto.picture.PictureUploadByBatchRequest;
-import com.eimy.yunpicturebackend.model.dto.picture.PictureUploadRequest;
+import com.eimy.yunpicturebackend.model.dto.picture.*;
 import com.eimy.yunpicturebackend.model.entity.Picture;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.eimy.yunpicturebackend.model.entity.User;
 import com.eimy.yunpicturebackend.model.vo.PictureVO;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.scheduling.annotation.Async;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -20,51 +17,52 @@ import javax.servlet.http.HttpServletRequest;
 * @createDate 2025-05-04 16:11:46
 */
 public interface PictureService extends IService<Picture> {
+
+    /**
+     * 校验图片
+     *
+     * @param picture
+     */
+    void validPicture(Picture picture);
+
     /**
      * 上传图片
      *
-     * @param inputSource
+     * @param inputSource          文件输入源
      * @param pictureUploadRequest
      * @param loginUser
      * @return
      */
-    PictureVO uploadPicture(Object inputSource, PictureUploadRequest pictureUploadRequest, User loginUser);
-
-
-    /**
-     * 将查询请求转换为QueryWrapper请求
-     *
-     * @param pictureQueryRequest
-     * @return
-     */
-    public QueryWrapper<Picture> getQueryWrapper(PictureQueryRequest pictureQueryRequest);
+    PictureVO uploadPicture(Object inputSource,
+                            PictureUploadRequest pictureUploadRequest,
+                            User loginUser);
 
     /**
-     * 获取单个图片封装
+     * 获取图片包装类（单条）
      *
      * @param picture
      * @param request
      * @return
      */
-    public PictureVO getPictureVO(Picture picture, HttpServletRequest request);
-
+    PictureVO getPictureVO(Picture picture, HttpServletRequest request);
 
     /**
-     * 分页获取图片封装
+     * 获取图片包装类（分页）
      *
      * @param picturePage
      * @param request
      * @return
      */
-    public Page<PictureVO> getPictureVOPage(Page<Picture> picturePage, HttpServletRequest request);
-
+    Page<PictureVO> getPictureVOPage(Page<Picture> picturePage, HttpServletRequest request);
 
     /**
-     * 图片数据校验，在更新和修改图片时进行判断
+     * 获取查询对象
      *
-     * @param picture
+     * @param pictureQueryRequest
+     * @return
      */
-    public void validPicture(Picture picture);
+    QueryWrapper<Picture> getQueryWrapper(PictureQueryRequest pictureQueryRequest);
+
 
     /**
      * 图片审核
@@ -75,12 +73,12 @@ public interface PictureService extends IService<Picture> {
     void doPictureReview(PictureReviewRequest pictureReviewRequest, User loginUser);
 
     /**
-     * 补充审核参数：图片上传、用户编辑、管理员更新
+     * 填充审核参数
      *
      * @param picture
      * @param loginUser
      */
-    public void fillReviewParams(Picture picture, User loginUser);
+    void fillReviewParams(Picture picture, User loginUser);
 
     /**
      * 批量抓取和创建图片
@@ -89,8 +87,37 @@ public interface PictureService extends IService<Picture> {
      * @param loginUser
      * @return 成功创建的图片数
      */
-    Integer uploadPictureByBatch(
-            PictureUploadByBatchRequest pictureUploadByBatchRequest,
-            User loginUser
-    );
+    Integer uploadPictureByBatch(PictureUploadByBatchRequest pictureUploadByBatchRequest,
+                                 User loginUser);
+
+    /**
+     * 清理图片文件
+     *
+     * @param oldPicture
+     */
+    void clearPictureFile(Picture oldPicture);
+
+    /**
+     * 删除图片
+     *
+     * @param pictureId
+     * @param loginUser
+     */
+    void deletePicture(long pictureId, User loginUser);
+
+    /**
+     * 编辑图片
+     *
+     * @param pictureEditRequest
+     * @param loginUser
+     */
+    void editPicture(PictureEditRequest pictureEditRequest, User loginUser);
+
+    /**
+     * 校验空间图片的权限
+     *
+     * @param loginUser
+     * @param picture
+     */
+    void checkPictureAuth(User loginUser, Picture picture);
 }

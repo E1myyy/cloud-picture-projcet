@@ -1,5 +1,4 @@
 <template>
-  <div id="pictureManagePage">
     <a-flex justify="space-between" style="margin-bottom: 16px">
       <h2>图片管理</h2>
       <a-space>
@@ -111,7 +110,6 @@
       </template>
 
     </a-table>
-  </div>
 </template>
 
 <script lang="ts" setup>
@@ -270,5 +268,7 @@ onMounted(() => {
 })
 </script>
 
-<style scoped></style>
+<style scoped>
+
+</style>
 

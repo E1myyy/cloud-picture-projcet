@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "openapi": "node openapi.config.js",
-    "dev": "vite",
+    "devPictureProjcet": "vite",
     "build": "run-p type-check \"build-only {@}\" --",
     "preview": "vite preview",
     "build-only": "vite build",
@@ -14,6 +14,7 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "@vueuse/core": "^13.3.0",
     "ant-design-vue": "^4.2.6",
     "file-saver": "^2.0.5",
     "pinia": "^2.2.6",

@@ -1,7 +1,7 @@
 package com.eimy.yunpicturebackend.aop;
 
 
-import com.eimy.yunpicturebackend.annotation.Authcheck;
+import com.eimy.yunpicturebackend.annotation.AuthCheck;
 import com.eimy.yunpicturebackend.exception.BusinessException;
 import com.eimy.yunpicturebackend.exception.ErrorCode;
 import com.eimy.yunpicturebackend.model.entity.User;
@@ -32,7 +32,7 @@ public class AuthInterceptor {
      * @param authCheck 权限校验注解
      */
     @Around("@annotation(authCheck)")
-    public Object doInterceptor(ProceedingJoinPoint joinPoint, Authcheck authCheck) throws Throwable {
+    public Object doInterceptor(ProceedingJoinPoint joinPoint, AuthCheck authCheck) throws Throwable {
         String mustRole = authCheck.mustRole();
         RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
         HttpServletRequest request = ((ServletRequestAttributes) requestAttributes).getRequest();
