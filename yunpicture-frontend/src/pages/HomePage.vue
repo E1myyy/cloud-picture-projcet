@@ -1,6 +1,6 @@
 <template>
-  <div id="homePage" class="home-container">
-    <div class="home-content">
+  <div id="homePage" class="gradient-background">
+    <a-card class="main-card">
       <!-- Logo和标题 -->
       <div class="logo-container">
         <div class="logo-circle">
@@ -42,55 +42,34 @@
         </div>
       </div>
 
-      <!-- 瀑布流图片列表 -->
-      <div ref="waterfallContainer" class="waterfall-container">
-        <div
-          v-for="(item, index) in dataList"
-          :key="index"
-          class="waterfall-item"
-          :style="{ height: itemHeight(item) }"
-        >
-          <a-image
-            :src="item.url"
-            :alt="item.name"
-            class="waterfall-image"
-          />
-          <div class="picture-info">
-            <h3>{{ item.name }}</h3>
-            <p>{{ item.introduction }}</p>
-          </div>
-        </div>
-      </div>
+      <!-- 图片列表 -->
+      <PictureList :dataList="dataList" :loading="loading" />
 
-      <!-- 加载状态 -->
-      <div v-if="loading" class="loading-indicator">
-        <a-spin size="large" />
-        <p>加载中...</p>
-      </div>
-      <div v-else-if="dataList.length > 0 && dataList.length >= total" class="loading-indicator">
-        <p>没有更多图片了</p>
-      </div>
-      <div v-else-if="!loading && dataList.length === 0" class="loading-indicator">
-        <p>暂无图片数据</p>
-      </div>
-    </div>
+      <!-- 分页 -->
+      <a-pagination
+        class="pagination"
+        v-model:current="searchParams.current"
+        v-model:pageSize="searchParams.pageSize"
+        :total="total"
+        @change="onPageChange"
+      />
+    </a-card>
   </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
-import { useInfiniteScroll } from '@vueuse/core'
 import {
   listPictureTagCategoryUsingGet,
   listPictureVoByPageUsingPost,
 } from '@/api/pictureController.ts'
 import { message } from 'ant-design-vue'
+import PictureList from '@/components/PictureList.vue' // 定义数据
 
 // 定义数据
 const dataList = ref<API.PictureVO[]>([])
 const total = ref(0)
-const loading = ref(false) // 初始改为false
-const waterfallContainer = ref<HTMLElement | null>(null)
+const loading = ref(true)
 
 // 搜索条件
 const searchParams = reactive<API.PictureQueryRequest>({
@@ -101,68 +80,49 @@ const searchParams = reactive<API.PictureQueryRequest>({
 })
 
 // 获取数据
-const fetchData = async (append = false) => {
-  // 移除 if (loading.value) return 这一行
+const fetchData = async () => {
   loading.value = true
-
   // 转换搜索参数
   const params = {
     ...searchParams,
     tags: [] as string[],
   }
-
   if (selectedCategory.value !== 'all') {
     params.category = selectedCategory.value
   }
-
   // [true, false, false] => ['java']
   selectedTagList.value.forEach((useTag, index) => {
     if (useTag) {
       params.tags.push(tagList.value[index])
     }
   })
-
-  try {
-    const res = await listPictureVoByPageUsingPost(params)
-    if (res.data.code === 0 && res.data.data) {
-      if (append) {
-        // 追加数据
-        dataList.value = [...dataList.value, ...(res.data.data.records ?? [])]
-      } else {
-        // 重置数据
-        dataList.value = res.data.data.records ?? []
-      }
-      total.value = res.data.data.total ?? 0
-    } else {
-      message.error('获取数据失败，' + (res.data.message || '未知错误'))
-    }
-  } catch (e) {
-    console.error('请求失败:', e)
-    message.error('请求失败，请检查网络')
-  } finally {
-    loading.value = false
+  const res = await listPictureVoByPageUsingPost(params)
+  if (res.data.code === 0 && res.data.data) {
+    dataList.value = res.data.data.records ?? []
+    total.value = res.data.data.total ?? 0
+  } else {
+    message.error('获取数据失败，' + res.data.message)
   }
+  loading.value = false
 }
 
-// 无限滚动 - 修复条件判断
-useInfiniteScroll(
-  waterfallContainer,
-  async () => {
-    // 添加更多条件检查
-    if (!loading.value &&
-      dataList.value.length > 0 &&
-      dataList.value.length < total.value) {
-      searchParams.current += 1
-      await fetchData(true)
-    }
-  },
-  { distance: 100 }
-)
+// 页面加载时获取数据，请求一次
+onMounted(() => {
+  fetchData()
+})
+
+// 分页参数
+const onPageChange = (page: number, pageSize: number) => {
+  searchParams.current = page
+  searchParams.pageSize = pageSize
+  fetchData()
+}
+
 // 搜索
 const doSearch = () => {
   // 重置搜索条件
   searchParams.current = 1
-  fetchData(false)
+  fetchData()
 }
 
 // 标签和分类列表
@@ -173,27 +133,19 @@ const selectedTagList = ref<boolean[]>([])
 
 /**
  * 获取标签和分类选项
+ * @param values
  */
 const getTagCategoryOptions = async () => {
-  try {
-    const res = await listPictureTagCategoryUsingGet()
-    if (res.data.code === 0 && res.data.data) {
-      tagList.value = res.data.data.tagList ?? []
-      categoryList.value = res.data.data.categoryList ?? []
-      // 初始化选中状态
-      selectedTagList.value = new Array(tagList.value.length).fill(false)
-    } else {
-      message.error('获取标签分类列表失败，' + (res.data.message || '未知错误'))
-    }
-  } catch (e) {
-    console.error('获取标签分类失败:', e)
-    message.error('获取标签分类失败')
+  const res = await listPictureTagCategoryUsingGet()
+  if (res.data.code === 0 && res.data.data) {
+    tagList.value = res.data.data.tagList ?? []
+    categoryList.value = res.data.data.categoryList ?? []
+  } else {
+    message.error('获取标签分类列表失败，' + res.data.message)
   }
 }
 
 onMounted(() => {
-  // 确保初始化加载
-  fetchData(false)
   getTagCategoryOptions()
 })
 </script>
@@ -203,18 +155,6 @@ onMounted(() => {
   min-height: 100vh;
   padding: 24px;
   background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
-}
-
-.home-container {
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.home-content {
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .logo-container {
@@ -269,49 +209,6 @@ onMounted(() => {
   margin-top: 16px;
 }
 
-/* 瀑布流样式 */
-.waterfall-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 20px;
-}
-
-.waterfall-item {
-  position: relative;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease;
-  aspect-ratio: 3/4; /* 添加固定宽高比 */
-}
-
-.waterfall-image {
-  width: 100%;
-  height: 100%; /* 修复高度问题 */
-  object-fit: cover; /* 确保图片填充 */
-  display: block;
-}
-
-.waterfall-item:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
-}
-
-.picture-info {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
-  color: white;
-  padding: 16px;
-  transform: translateY(100%);
-  transition: transform 0.3s ease;
-}
-
-.waterfall-item:hover .picture-info {
-  transform: translateY(0);
-}
 
 .picture-info h3 {
   margin: 0 0 8px;
@@ -329,24 +226,4 @@ onMounted(() => {
   overflow: hidden;
 }
 
-.loading-indicator {
-  text-align: center;
-  padding: 40px 0;
-  color: #666;
-}
-
-/* 响应式调整 */
-@media (max-width: 768px) {
-  .waterfall-container {
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 15px;
-  }
-}
-
-@media (max-width: 480px) {
-  .waterfall-container {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 12px;
-  }
-}
 </style>

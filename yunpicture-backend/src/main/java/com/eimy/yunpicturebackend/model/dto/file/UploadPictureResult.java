@@ -2,6 +2,9 @@ package com.eimy.yunpicturebackend.model.dto.file;
 
 import lombok.Data;
 
+/**
+ * 上传图片的结果
+ */
 @Data
 public class UploadPictureResult {
 
@@ -14,7 +17,6 @@ public class UploadPictureResult {
      * 缩略图 url
      */
     private String thumbnailUrl;
-
 
     /**
      * 图片名称
@@ -46,5 +48,8 @@ public class UploadPictureResult {
      */
     private String picFormat;
 
+    /**
+     * 图片主色调
+     */
+    private String picColor;
 }
-

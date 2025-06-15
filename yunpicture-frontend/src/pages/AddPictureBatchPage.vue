@@ -51,7 +51,7 @@
 <script setup lang="ts">
 import { reactive, ref} from "vue";
 import {
- uploadByBatchUsingPost
+  uploadPictureByBatchUsingPost
 } from "@/api/pictureController.ts";
 import {message} from "ant-design-vue";
 import {useRouter} from "vue-router";
@@ -64,7 +64,7 @@ const loading = ref(false)
 
 const handleSubmit = async (values: any) => {
   loading.value = true;
-  const res = await uploadByBatchUsingPost({
+  const res = await uploadPictureByBatchUsingPost({
     ...formData,
   })
   if (res.data.code === 0 && res.data.data) {

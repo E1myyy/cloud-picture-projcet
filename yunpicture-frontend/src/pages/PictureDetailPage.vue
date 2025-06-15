@@ -1,13 +1,13 @@
 <template>
   <div id="pictureDetailPage">
     <a-row :gutter="[16, 16]">
-      <!-- 图片展示区 -->
+      <!-- 图片预览 -->
       <a-col :sm="24" :md="16" :xl="18">
         <a-card title="图片预览">
-          <a-image style="max-height: 600px; object-fit: contain" :src="picture.url" />
+          <a-image :src="picture.url" style="max-height: 600px; object-fit: contain" />
         </a-card>
       </a-col>
-      <!-- 图片信息区 -->
+      <!-- 图片信息区域 -->
       <a-col :sm="24" :md="8" :xl="6">
         <a-card title="图片信息">
           <a-descriptions :column="1">
@@ -46,20 +46,33 @@
             <a-descriptions-item label="大小">
               {{ formatSize(picture.picSize) }}
             </a-descriptions-item>
+            <a-descriptions-item label="主色调">
+              <a-space>
+                {{ picture.picColor ?? '-' }}
+                <div
+                  v-if="picture.picColor"
+                  :style="{
+                    width: '16px',
+                    height: '16px',
+                    backgroundColor: toHexColor(picture.picColor),
+                  }"
+                />
+              </a-space>
+            </a-descriptions-item>
           </a-descriptions>
           <!--审核按钮行-->
-          <div style="display: flex; flex-direction: column; gap: 16px;">
-            <a-space v-if="checkEditPermission(picture.userId)">
+          <div style="display: flex; flex-direction: column; gap: 16px">
+            <a-space v-if="(picture.userId)">
               <a-button
-                v-if="picture.reviewStatus !== PIC_REVIEW_STATUS_ENUM.PASS"
+                v-if="canAdminEdit"
                 :icon="h(CheckCircleOutlined)"
                 type="default"
-                @click="handleReview(picture ,PIC_REVIEW_STATUS_ENUM.PASS)"
+                @click="handleReview(picture, PIC_REVIEW_STATUS_ENUM.PASS)"
               >
                 审核通过
               </a-button>
               <a-button
-                v-if="picture.reviewStatus !== PIC_REVIEW_STATUS_ENUM.REJECT"
+                v-if="canAdminEdit"
                 :icon="h(CloseCircleOutlined)"
                 type="default"
                 danger
@@ -70,13 +83,11 @@
             </a-space>
             <!-- 编辑和删除按钮行 -->
             <a-space>
-              <a-button
-                v-if="picture.userId && checkEditPermission(picture.userId)"
-                :icon="h(EditOutlined)"
-                type="default"
-                @click="doEdit"
-              >编辑</a-button>
-              <a-popconfirm v-if="picture.userId && checkEditPermission(picture.userId)"
+              <a-button v-if="canEdit" :icon="h(EditOutlined)" type="default" @click="doEdit">
+                编辑
+              </a-button>
+              <a-popconfirm
+                v-if="canEdit"
                 title="确定删除当前图片？"
                 ok-text="是"
                 cancel-text="否"
@@ -85,7 +96,6 @@
                 <a-button type="link" danger :icon="h(DeleteOutlined)">删除</a-button>
               </a-popconfirm>
             </a-space>
-
             <!-- 下载按钮行 -->
             <a-space>
               <a-button type="primary" @click="doDownload">
@@ -94,27 +104,39 @@
                   <DownloadOutlined />
                 </template>
               </a-button>
+              <a-button :icon="h(ShareAltOutlined)" type="primary" ghost @click="doShare">
+                分享
+              </a-button>
             </a-space>
           </div>
         </a-card>
       </a-col>
     </a-row>
+    <ShareModal ref="shareModalRef" :link="shareLink" />
   </div>
 </template>
 
 <script setup lang="ts">
-import {onMounted, h, ref, reactive} from 'vue'
-import { message } from 'ant-design-vue'
+import {computed, h, onMounted, reactive, ref} from 'vue'
 import {
   deletePictureUsingPost,
   doPictureReviewUsingPost,
   getPictureVoByIdUsingGet,
   listPictureByPageUsingPost
 } from '@/api/pictureController.ts'
-import { downloadImage, formatSize } from '@/utils'
-import { EditOutlined, DeleteOutlined, CheckCircleOutlined, CloseCircleOutlined} from '@ant-design/icons-vue'
-import { useRouter } from 'vue-router'
+import { message } from 'ant-design-vue'
+import {
+  DeleteOutlined,
+  DownloadOutlined,
+  EditOutlined,
+  ShareAltOutlined,
+  CloseCircleOutlined,
+  CheckCircleOutlined
+} from '@ant-design/icons-vue'
 import { useLoginUserStore } from '@/stores/useLoginUserStore.ts'
+import { useRouter } from 'vue-router'
+import { downloadImage, formatSize } from '@/utils'
+import ShareModal from '@/components/ShareModal.vue'
 import {PIC_REVIEW_STATUS_ENUM} from "@/constants/picture.ts";
 
 interface Props {
@@ -123,6 +145,8 @@ interface Props {
 
 const props = defineProps<Props>()
 const picture = ref<API.PictureVO>({})
+
+const loginUserStore = useLoginUserStore()
 
 //审核操作
 const handleReview = async (picture: API.PictureVO, reviewStatus: number) => {
@@ -143,7 +167,6 @@ const handleReview = async (picture: API.PictureVO, reviewStatus: number) => {
 // 数据
 const dataList = ref<API.PictureVO[]>([])
 const total = ref(0)
-
 // 搜索条件
 // 确保分页参数命名正确
 const searchParams = reactive<API.PictureQueryRequest>({
@@ -165,52 +188,68 @@ const fetchData = async () => {
   }
 }
 
-// 权限校验
-const loginUserStore = useLoginUserStore()
-const checkEditPermission = (userId: number) => {
-  const currentUser = loginUserStore.loginUser
-  return (
-    currentUser?.id === userId ||
-    currentUser?.userRole === 'admin'
-  )
-}
+// 是否具有编辑权限
+const canEdit = computed(() => {
+  const loginUser = loginUserStore.loginUser
+  // 未登录不可编辑
+  if (!loginUser.id) {
+    return false
+  }
+  // 仅本人或管理员可编辑
+  const user = picture.value.user || {}
+  return loginUser.id === user.id || loginUser.userRole === 'admin'
+})
 
-// 获取数据
+const canAdminEdit = computed(() => {
+  const loginUser = loginUserStore.loginUser
+  // 未登录不可编辑
+  if (!loginUser.id) {
+    return false
+  }
+  // 管理员可编辑
+  return loginUser.userRole === 'admin'
+})
+
+// 获取图片详情
 const fetchPictureDetail = async () => {
   try {
     const res = await getPictureVoByIdUsingGet({
-      id: props.id
+      id: props.id,
     })
-    if (res.data.code == 0 && res.data.data) {
+    if (res.data.code === 0 && res.data.data) {
       picture.value = res.data.data
     } else {
       message.error('获取图片详情失败，' + res.data.message)
     }
   } catch (e: any) {
-    message.error('获取图片详情失败，' + e.message)
+    message.error('获取图片详情失败：' + e.message)
   }
 }
-// 下载图片
-// 处理下载
-const doDownload = () => {
-  downloadImage(picture.value.url)
-}
 
+onMounted(() => {
+  fetchPictureDetail()
+})
 
-// 编辑图片
 const router = useRouter()
-const doEdit = async () => {
-  router.push('/add_picture?id=' + picture.value.id)
+
+// 编辑
+const doEdit = () => {
+  router.push({
+    path: '/add_picture',
+    query: {
+      id: picture.value.id,
+      spaceId: picture.value.spaceId,
+    },
+  })
 }
 
-// 删除图片
+// 删除数据
 const doDelete = async () => {
   const id = picture.value.id
   if (!id) {
     return
   }
   const res = await deletePictureUsingPost({ id })
-  console.log('res', res)
   if (res.data.code === 0) {
     message.success('删除成功')
   } else {
@@ -218,10 +257,27 @@ const doDelete = async () => {
   }
 }
 
-// 页面加载时请求一次
-onMounted(() => {
-  fetchPictureDetail()
-})
+// 下载图片
+const doDownload = () => {
+  downloadImage(picture.value.url)
+}
+
+// ----- 分享操作 ----
+const shareModalRef = ref()
+// 分享链接
+const shareLink = ref<string>()
+// 分享
+const doShare = () => {
+  shareLink.value = `${window.location.protocol}//${window.location.host}/picture/${picture.value.id}`
+  if (shareModalRef.value) {
+    shareModalRef.value.openModal()
+  }
+}
+
 </script>
 
-<style scoped></style>
+<style scoped>
+#pictureDetailPage {
+  margin-bottom: 16px;
+}
+</style>
