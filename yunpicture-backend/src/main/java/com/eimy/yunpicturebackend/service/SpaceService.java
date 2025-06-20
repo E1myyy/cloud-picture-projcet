@@ -2,20 +2,20 @@ package com.eimy.yunpicturebackend.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.baomidou.mybatisplus.extension.service.IService;
 import com.eimy.yunpicturebackend.model.dto.space.SpaceAddRequest;
 import com.eimy.yunpicturebackend.model.dto.space.SpaceQueryRequest;
-import com.eimy.yunpicturebackend.model.entity.Space ;
+import com.eimy.yunpicturebackend.model.entity.Space;
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.eimy.yunpicturebackend.model.entity.User;
 import com.eimy.yunpicturebackend.model.vo.SpaceVO;
 
 import javax.servlet.http.HttpServletRequest;
 
 /**
-* @author 路灯
-* @description 针对表【space(空间)】的数据库操作Service
-* @createDate 2025-06-09 17:03:35
-*/
+ * @author 路灯
+ * @description 针对表【space(空间)】的数据库操作Service
+ * @createDate 2025-06-09 17:03:35
+ */
 public interface SpaceService extends IService<Space> {
 
     /**
@@ -67,4 +67,12 @@ public interface SpaceService extends IService<Space> {
      * @param space
      */
     void fillSpaceBySpaceLevel(Space space);
+
+    /**
+     * 校验空间权限
+     *
+     * @param loginUser
+     * @param space
+     */
+    void checkSpaceAuth(User loginUser, Space space);
 }

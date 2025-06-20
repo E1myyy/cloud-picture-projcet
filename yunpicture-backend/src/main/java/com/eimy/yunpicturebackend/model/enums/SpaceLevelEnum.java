@@ -3,6 +3,9 @@ package com.eimy.yunpicturebackend.model.enums;
 import cn.hutool.core.util.ObjUtil;
 import lombok.Getter;
 
+/**
+ * 空间级别枚举
+ */
 @Getter
 public enum SpaceLevelEnum {
 
@@ -47,4 +50,3 @@ public enum SpaceLevelEnum {
         return null;
     }
 }
-

@@ -8,6 +8,9 @@ import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.eimy.yunpicturebackend.api.aliyunai.AliYunAiApi;
+import com.eimy.yunpicturebackend.api.aliyunai.model.CreateOutPaintingTaskRequest;
+import com.eimy.yunpicturebackend.api.aliyunai.model.CreateOutPaintingTaskResponse;
 import com.eimy.yunpicturebackend.exception.BusinessException;
 import com.eimy.yunpicturebackend.exception.ErrorCode;
 import com.eimy.yunpicturebackend.exception.ThrowUtils;
@@ -16,6 +19,7 @@ import com.eimy.yunpicturebackend.manager.FileManager;
 import com.eimy.yunpicturebackend.manager.upload.FilePictureUpload;
 import com.eimy.yunpicturebackend.manager.upload.PictureUploadTemplate;
 import com.eimy.yunpicturebackend.manager.upload.UrlPictureUpload;
+import com.eimy.yunpicturebackend.mapper.PictureMapper;
 import com.eimy.yunpicturebackend.model.dto.file.UploadPictureResult;
 import com.eimy.yunpicturebackend.model.dto.picture.*;
 import com.eimy.yunpicturebackend.model.entity.Picture;
@@ -25,7 +29,6 @@ import com.eimy.yunpicturebackend.model.enums.PictureReviewStatusEnum;
 import com.eimy.yunpicturebackend.model.vo.PictureVO;
 import com.eimy.yunpicturebackend.model.vo.UserVO;
 import com.eimy.yunpicturebackend.service.PictureService;
-import com.eimy.yunpicturebackend.mapper.PictureMapper;
 import com.eimy.yunpicturebackend.service.SpaceService;
 import com.eimy.yunpicturebackend.service.UserService;
 import com.eimy.yunpicturebackend.utils.ColorSimilarUtils;
@@ -50,10 +53,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
-* @author 路灯
-* @description 针对表【picture(图片)】的数据库操作Service实现
-* @createDate 2025-05-04 16:11:46
-*/
+ * @author 路灯
+ * @description 针对表【picture(图片)】的数据库操作Service实现
+ * @createDate 2025-05-04 16:11:46
+ */
 @Slf4j
 @Service
 public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
@@ -79,6 +82,9 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
 
     @Resource
     private TransactionTemplate transactionTemplate;
+
+    @Resource
+    private AliYunAiApi aliYunAiApi;
 
     @Override
     public void validPicture(Picture picture) {
@@ -107,10 +113,11 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         if (spaceId != null) {
             Space space = spaceService.getById(spaceId);
             ThrowUtils.throwIf(space == null, ErrorCode.NOT_FOUND_ERROR, "空间不存在");
-            // 校验是否有空间的权限，仅空间管理员才能上传
-            if (!loginUser.getId().equals(space.getUserId())) {
-                throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "没有空间权限");
-            }
+            // 改为使用统一的权限校验
+//            // 校验是否有空间的权限，仅空间管理员才能上传
+//            if (!loginUser.getId().equals(space.getUserId())) {
+//                throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "没有空间权限");
+//            }
             // 校验额度
             if (space.getTotalCount() >= space.getMaxCount()) {
                 throw new BusinessException(ErrorCode.OPERATION_ERROR, "空间条数不足");
@@ -128,10 +135,11 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         if (pictureId != null) {
             Picture oldPicture = this.getById(pictureId);
             ThrowUtils.throwIf(oldPicture == null, ErrorCode.NOT_FOUND_ERROR, "图片不存在");
-            // 仅本人或管理员可编辑图片
-            if (!oldPicture.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)) {
-                throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
-            }
+            // 改为使用统一的权限校验
+//            // 仅本人或管理员可编辑图片
+//            if (!oldPicture.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)) {
+//                throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
+//            }
             // 校验空间是否一致
             // 没传 spaceId，则复用原有图片的 spaceId（这样也兼容了公共图库）
             if (spaceId == null) {
@@ -409,8 +417,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
                 log.info("当前链接为空，已跳过：{}", fileUrl);
                 continue;
             }
-            // 处理图片的地址，防止转义或者和对象存储冲突的问题
-            // codefather.cn?yupi=dog，应该只保留 codefather.cn
+
             int questionMarkIndex = fileUrl.indexOf("?");
             if (questionMarkIndex > -1) {
                 fileUrl = fileUrl.substring(0, questionMarkIndex);
@@ -462,20 +469,23 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         // 判断是否存在
         Picture oldPicture = this.getById(pictureId);
         ThrowUtils.throwIf(oldPicture == null, ErrorCode.NOT_FOUND_ERROR);
-        // 校验权限
-        checkPictureAuth(loginUser, oldPicture);
+        // 校验权限，已经改为使用注解鉴权
+//        checkPictureAuth(loginUser, oldPicture);
         // 开启事务
         transactionTemplate.execute(status -> {
             // 操作数据库
             boolean result = this.removeById(pictureId);
             ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
             // 更新空间的使用额度，释放额度
-            boolean update = spaceService.lambdaUpdate()
-                    .eq(Space::getId, oldPicture.getSpaceId())
-                    .setSql("totalSize = totalSize - " + oldPicture.getPicSize())
-                    .setSql("totalCount = totalCount - 1")
-                    .update();
-            ThrowUtils.throwIf(!update, ErrorCode.OPERATION_ERROR, "额度更新失败");
+            Long spaceId = oldPicture.getSpaceId();
+            if (spaceId != null) {
+                boolean update = spaceService.lambdaUpdate()
+                        .eq(Space::getId, oldPicture.getSpaceId())
+                        .setSql("totalSize = totalSize - " + oldPicture.getPicSize())
+                        .setSql("totalCount = totalCount - 1")
+                        .update();
+                ThrowUtils.throwIf(!update, ErrorCode.OPERATION_ERROR, "额度更新失败");
+            }
             return true;
         });
         // 异步清理文件
@@ -497,8 +507,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         long id = pictureEditRequest.getId();
         Picture oldPicture = this.getById(id);
         ThrowUtils.throwIf(oldPicture == null, ErrorCode.NOT_FOUND_ERROR);
-        // 校验权限
-        checkPictureAuth(loginUser, oldPicture);
+        // 校验权限，已经改为使用注解鉴权
+//        checkPictureAuth(loginUser, oldPicture);
         // 补充审核参数
         this.fillReviewParams(picture, loginUser);
         // 操作数据库
@@ -608,6 +618,24 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "批量编辑失败");
     }
 
+    @Override
+    public CreateOutPaintingTaskResponse createPictureOutPaintingTask(CreatePictureOutPaintingTaskRequest createPictureOutPaintingTaskRequest, User loginUser) {
+        // 获取图片信息
+        Long pictureId = createPictureOutPaintingTaskRequest.getPictureId();
+        Picture picture = Optional.ofNullable(this.getById(pictureId))
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_ERROR, "图片不存在"));
+        // 校验权限，已经改为使用注解鉴权
+//        checkPictureAuth(loginUser, picture);
+        // 创建扩图任务
+        CreateOutPaintingTaskRequest createOutPaintingTaskRequest = new CreateOutPaintingTaskRequest();
+        CreateOutPaintingTaskRequest.Input input = new CreateOutPaintingTaskRequest.Input();
+        input.setImageUrl(picture.getUrl());
+        createOutPaintingTaskRequest.setInput(input);
+        createOutPaintingTaskRequest.setParameters(createPictureOutPaintingTaskRequest.getParameters());
+        // 创建任务
+        return aliYunAiApi.createOutPaintingTask(createOutPaintingTaskRequest);
+    }
+
     /**
      * nameRule 格式：图片{序号}
      *
@@ -630,3 +658,14 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
+

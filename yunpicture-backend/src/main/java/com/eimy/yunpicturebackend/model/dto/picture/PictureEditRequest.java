@@ -5,7 +5,9 @@ import lombok.Data;
 import java.io.Serializable;
 import java.util.List;
 
-//图片修改请求，一般情况下给普通用户使用，可修改的字段范围小于更新请求：
+/**
+ * 图片编辑请求
+ */
 @Data
 public class PictureEditRequest implements Serializable {
 
@@ -36,4 +38,3 @@ public class PictureEditRequest implements Serializable {
 
     private static final long serialVersionUID = 1L;
 }
-

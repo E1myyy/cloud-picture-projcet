@@ -42,11 +42,10 @@
     </a-table>
   </div>
 </template>
-
 <script lang="ts" setup>
 import { computed, onMounted, reactive, ref } from 'vue'
-import { message } from 'ant-design-vue'
 import { deleteUserUsingPost, listUserVoByPageUsingPost } from '@/api/userController.ts'
+import { message } from 'ant-design-vue'
 import dayjs from 'dayjs'
 
 const columns = [
@@ -67,6 +66,10 @@ const columns = [
     dataIndex: 'userAvatar',
   },
   {
+    title: '简介',
+    dataIndex: 'userProfile',
+  },
+  {
     title: '用户角色',
     dataIndex: 'userRole',
   },
@@ -80,19 +83,7 @@ const columns = [
   },
 ]
 
-const doDelete = async (id: number) => {
-  const res = await deleteUserUsingPost({ id })
-  console.log('res', res)
-  if (res.data.code === 0) {
-    message.success('删除成功')
-    // 刷新数据
-    await fetchData()
-  } else {
-    message.error('删除失败')
-  }
-}
-
-// 数据
+// 定义数据
 const dataList = ref<API.UserVO[]>([])
 const total = ref(0)
 
@@ -109,13 +100,29 @@ const fetchData = async () => {
   const res = await listUserVoByPageUsingPost({
     ...searchParams,
   })
-  if (res.data.data) {
+  if (res.data.code === 0 && res.data.data) {
     dataList.value = res.data.data.records ?? []
     total.value = res.data.data.total ?? 0
   } else {
     message.error('获取数据失败，' + res.data.message)
   }
 }
+
+// 页面加载时获取数据，请求一次
+onMounted(() => {
+  fetchData()
+})
+
+// 分页参数
+const pagination = computed(() => {
+  return {
+    current: searchParams.current,
+    pageSize: searchParams.pageSize,
+    total: total.value,
+    showSizeChanger: true,
+    showTotal: (total) => `共 ${total} 条`,
+  }
+})
 
 // 表格变化之后，重新获取数据
 const doTableChange = (page: any) => {
@@ -131,26 +138,18 @@ const doSearch = () => {
   fetchData()
 }
 
-// 分页参数
-const pagination = computed(() => {
-  return {
-    current: searchParams.current,
-    pageSize: searchParams.pageSize,
-    total: total.value,
-    showSizeChanger: true,
-    showTotal: (total) => `共 ${total} 条`,
-    locale: {
-      items_per_page: '条/页', // 设置每页条数后缀
-    },
-    pageSizeOptions: ['10', '20', '30'], // 保持数值选项
+// 删除数据
+const doDelete = async (id: string) => {
+  if (!id) {
+    return
   }
-})
-
-//页面加载时请求一次数据
-onMounted(() => {
-  fetchData()
-})
+  const res = await deleteUserUsingPost({ id })
+  if (res.data.code === 0) {
+    message.success('删除成功')
+    // 刷新数据
+    fetchData()
+  } else {
+    message.error('删除失败')
+  }
+}
 </script>
-
-<style scoped></style>
-

@@ -1,5 +1,8 @@
 package com.eimy.yunpicturebackend.constant;
 
+/**
+ * 用户常量
+ */
 public interface UserConstant {
 
     /**
@@ -21,4 +24,3 @@ public interface UserConstant {
 
     // endregion
 }
-

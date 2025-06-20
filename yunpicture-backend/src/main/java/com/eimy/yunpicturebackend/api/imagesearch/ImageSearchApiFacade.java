@@ -4,7 +4,6 @@ import com.eimy.yunpicturebackend.api.imagesearch.model.ImageSearchResult;
 import com.eimy.yunpicturebackend.api.imagesearch.sub.GetImageFirstUrlApi;
 import com.eimy.yunpicturebackend.api.imagesearch.sub.GetImageListApi;
 import com.eimy.yunpicturebackend.api.imagesearch.sub.GetImagePageUrlApi;
-import com.eimy.yunpicturebackend.model.entity.Picture;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -14,7 +13,6 @@ public class ImageSearchApiFacade {
 
     /**
      * 搜索图片
-     *
      * @param imageUrl
      * @return
      */
@@ -25,10 +23,4 @@ public class ImageSearchApiFacade {
         return imageList;
     }
 
-    public static void main(Picture picture) {
-        String imageUrl = picture.getUrl();
-        List<ImageSearchResult> resultList = searchImage(imageUrl);
-        System.out.println("结果列表" + resultList);
-    }
 }
-

@@ -17,55 +17,68 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * URL 图片上传
+ */
 @Service
 public class UrlPictureUpload extends PictureUploadTemplate {
+
     @Override
     protected void validPicture(Object inputSource) {
         String fileUrl = (String) inputSource;
-        ThrowUtils.throwIf(StrUtil.isBlank(fileUrl), ErrorCode.PARAMS_ERROR, "文件地址不能为空");
+        // 1. 校验非空
+        ThrowUtils.throwIf(StrUtil.isBlank(fileUrl), ErrorCode.PARAMS_ERROR, "文件地址为空");
+
+        // 2. 校验 URL 格式
         try {
-            //1.验证URL格式，校验是否是合法的URL
             new URL(fileUrl);
         } catch (MalformedURLException e) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "文件地址格式不正确");
         }
-        //2.校验URL协议
-        ThrowUtils.throwIf(!(fileUrl.startsWith("http://") || fileUrl.startsWith("https://")), ErrorCode.PARAMS_ERROR, "仅支持HTTP或者HTTPS协议的文件地址");
-        //3.发送HEAD请求以验证文件是否存在
-        HttpResponse response = null;
+        // 3. 校验 URL 的协议
+        ThrowUtils.throwIf(!fileUrl.startsWith("http://") && !fileUrl.startsWith("https://"),
+                ErrorCode.PARAMS_ERROR, "仅支持 HTTP 或 HTTPS 协议的文件地址"
+        );
+        // 4. 发送 HEAD 请求验证文件是否存在
+        HttpResponse httpResponse = null;
         try {
-            response = HttpUtil.createRequest(Method.HEAD, fileUrl).execute();
-            //未正常返回，无需执行其它判断
-            if (response.getStatus() != HttpStatus.HTTP_OK) {
+            httpResponse = HttpUtil.createRequest(Method.HEAD, fileUrl)
+                    .execute();
+            // 未正常返回，无需执行其他判断
+            if (httpResponse.getStatus() != HttpStatus.HTTP_OK) {
                 return;
             }
-            //4.校验文件类型
-            String contentType = response.header("Content-Type");
+            // 5. 文件存在，文件类型校验
+            String contentType = httpResponse.header("Content-Type");
+            // 不为空，才校验是否合法，这样校验规则相对宽松
             if (StrUtil.isNotBlank(contentType)) {
-                //允许的图片类型
-                final List<String> ALLOW_CONTENT_TYPES = Arrays.asList("image/jpg", "image/jpeg", "image/png", "image/webp");
-                ThrowUtils.throwIf(!ALLOW_CONTENT_TYPES.contains(contentType.toLowerCase()), ErrorCode.PARAMS_ERROR, "文件类型错误");
+                // 允许的图片类型
+                final List<String> ALLOW_CONTENT_TYPES = Arrays.asList("image/jpeg", "image/jpg", "image/png", "image/webp");
+                ThrowUtils.throwIf(!ALLOW_CONTENT_TYPES.contains(contentType.toLowerCase()),
+                        ErrorCode.PARAMS_ERROR, "文件类型错误");
             }
-            //5.校验文件大小
-            String contentLengthStr = response.header("Content-Length");
+            // 6. 文件存在，文件大小校验
+            String contentLengthStr = httpResponse.header("Content-Length");
             if (StrUtil.isNotBlank(contentLengthStr)) {
                 try {
                     long contentLength = Long.parseLong(contentLengthStr);
-                    final long T_MB = 1024 * 1024 * 3;
-                    ThrowUtils.throwIf(contentLength > T_MB, ErrorCode.PARAMS_ERROR, "文件大小不能超过3MB");
+                    final long ONE_M = 1024 * 1024;
+                    ThrowUtils.throwIf(contentLength > 2 * ONE_M, ErrorCode.PARAMS_ERROR, "文件大小不能超过 2MB");
                 } catch (NumberFormatException e) {
-                    throw new BusinessException(ErrorCode.PARAMS_ERROR, "文件大小格式错误");
+                    throw new BusinessException(ErrorCode.PARAMS_ERROR, "文件大小格式异常");
                 }
             }
         } finally {
-            if (response != null)
-                response.close();
+            // 记得释放资源
+            if (httpResponse != null) {
+                httpResponse.close();
+            }
         }
     }
+
     @Override
     protected String getOriginFilename(Object inputSource) {
         String fileUrl = (String) inputSource;
-        // 从 URL 中提取文件名
         return FileUtil.mainName(fileUrl);
     }
 
@@ -76,5 +89,3 @@ public class UrlPictureUpload extends PictureUploadTemplate {
         HttpUtil.downloadFile(fileUrl, file);
     }
 }
-
-

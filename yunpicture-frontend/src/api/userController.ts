@@ -2,8 +2,8 @@
 /* eslint-disable */
 import request from '@/request'
 
-/** userAdd POST /api/user/add */
-export async function userAddUsingPost(body: API.UserAddRequest, options?: { [key: string]: any }) {
+/** addUser POST /api/user/add */
+export async function addUserUsingPost(body: API.UserAddRequest, options?: { [key: string]: any }) {
   return request<API.BaseResponseLong_>('/api/user/add', {
     method: 'POST',
     headers: {
@@ -29,6 +29,21 @@ export async function deleteUserUsingPost(
   })
 }
 
+/** getUserById GET /api/user/get */
+export async function getUserByIdUsingGet(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.getUserByIdUsingGETParams,
+  options?: { [key: string]: any }
+) {
+  return request<API.BaseResponseUser_>('/api/user/get', {
+    method: 'GET',
+    params: {
+      ...params,
+    },
+    ...(options || {}),
+  })
+}
+
 /** getLoginUser GET /api/user/get/login */
 export async function getLoginUserUsingGet(options?: { [key: string]: any }) {
   return request<API.BaseResponseLoginUserVO_>('/api/user/get/login', {
@@ -37,14 +52,14 @@ export async function getLoginUserUsingGet(options?: { [key: string]: any }) {
   })
 }
 
-/** getUserByid POST /api/user/get/vo */
-export async function getUserByidUsingPost(
+/** getUserVOById GET /api/user/get/vo */
+export async function getUserVoByIdUsingGet(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
-  params: API.getUserByidUsingPOSTParams,
+  params: API.getUserVOByIdUsingGETParams,
   options?: { [key: string]: any }
 ) {
-  return request<API.BaseResponseUser_>('/api/user/get/vo', {
-    method: 'POST',
+  return request<API.BaseResponseUserVO_>('/api/user/get/vo', {
+    method: 'GET',
     params: {
       ...params,
     },
@@ -72,7 +87,7 @@ export async function userLoginUsingPost(
   body: API.UserLoginRequest,
   options?: { [key: string]: any }
 ) {
-  return request<API.BaseResponseLong_>('/api/user/login', {
+  return request<API.BaseResponseLoginUserVO_>('/api/user/login', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -82,8 +97,8 @@ export async function userLoginUsingPost(
   })
 }
 
-/** userLogOut POST /api/user/logout */
-export async function userLogOutUsingPost(options?: { [key: string]: any }) {
+/** userLogout POST /api/user/logout */
+export async function userLogoutUsingPost(options?: { [key: string]: any }) {
   return request<API.BaseResponseBoolean_>('/api/user/logout', {
     method: 'POST',
     ...(options || {}),

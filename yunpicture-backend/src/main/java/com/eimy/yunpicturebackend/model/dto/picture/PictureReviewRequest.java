@@ -3,8 +3,10 @@ package com.eimy.yunpicturebackend.model.dto.picture;
 import lombok.Data;
 
 import java.io.Serializable;
-//图片审核请求
 
+/**
+ * 图片审核请求
+ */
 @Data
 public class PictureReviewRequest implements Serializable {
 
@@ -14,7 +16,7 @@ public class PictureReviewRequest implements Serializable {
     private Long id;
 
     /**
-     * 状态：0-待审核, 1-通过, 2-拒绝
+     * 审核状态：0-待审核; 1-通过; 2-拒绝
      */
     private Integer reviewStatus;
 
@@ -23,8 +25,5 @@ public class PictureReviewRequest implements Serializable {
      */
     private String reviewMessage;
 
-
     private static final long serialVersionUID = 1L;
 }
-
-

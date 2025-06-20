@@ -31,45 +31,45 @@
         @finish="handleSubmit"
         class="picture-form"
       >
-      <a-form-item name="name" label="名称">
-        <a-input v-model:value="pictureForm.name" placeholder="请输入名称" allow-clear />
-      </a-form-item>
-      <a-form-item name="introduction" label="简介">
-        <a-textarea
-          v-model:value="pictureForm.introduction"
-          placeholder="请输入简介"
-          :auto-size="{ minRows: 2, maxRows: 5 }"
-          allow-clear
-        />
-      </a-form-item>
-      <a-form-item name="category" label="分类">
-        <a-auto-complete
-          v-model:value="pictureForm.category"
-          placeholder="请输入分类"
-          :options="categoryOptions"
-          allow-clear
-        />
-      </a-form-item>
-      <a-form-item name="tags" label="标签">
-        <a-select
-          v-model:value="pictureForm.tags"
-          mode="tags"
-          placeholder="请输入标签"
-          :options="tagOptions"
-          allow-clear
-        />
-      </a-form-item>
-      <a-form-item>
-        <a-button
-          type="primary"
-          html-type="submit"
-          style="width: 100%"
-          class="submit-button"
-        >
-          {{ route.query?.id ? '更新图片' : '创建图片' }}
-        </a-button>
-      </a-form-item>
-    </a-form>
+        <a-form-item name="name" label="名称">
+          <a-input v-model:value="pictureForm.name" placeholder="请输入名称" allow-clear />
+        </a-form-item>
+        <a-form-item name="introduction" label="简介">
+          <a-textarea
+            v-model:value="pictureForm.introduction"
+            placeholder="请输入简介"
+            :auto-size="{ minRows: 2, maxRows: 5 }"
+            allow-clear
+          />
+        </a-form-item>
+        <a-form-item name="category" label="分类">
+          <a-auto-complete
+            v-model:value="pictureForm.category"
+            placeholder="请输入分类"
+            :options="categoryOptions"
+            allow-clear
+          />
+        </a-form-item>
+        <a-form-item name="tags" label="标签">
+          <a-select
+            v-model:value="pictureForm.tags"
+            mode="tags"
+            placeholder="请输入标签"
+            :options="tagOptions"
+            allow-clear
+          />
+        </a-form-item>
+        <a-form-item>
+          <a-button
+            type="primary"
+            html-type="submit"
+            style="width: 100%"
+            class="submit-button"
+          >
+            {{ route.query?.id ? '更新图片' : '创建图片' }}
+          </a-button>
+        </a-form-item>
+      </a-form>
     </a-card>
   </div>
 </template>

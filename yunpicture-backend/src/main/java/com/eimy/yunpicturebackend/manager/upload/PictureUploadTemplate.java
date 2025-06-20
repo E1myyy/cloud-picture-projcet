@@ -1,21 +1,21 @@
 package com.eimy.yunpicturebackend.manager.upload;
 
-
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.RandomUtil;
+import com.qcloud.cos.model.PutObjectResult;
+import com.qcloud.cos.model.ciModel.persistence.CIObject;
+import com.qcloud.cos.model.ciModel.persistence.ImageInfo;
+import com.qcloud.cos.model.ciModel.persistence.ProcessResults;
 import com.eimy.yunpicturebackend.config.CosClientConfig;
 import com.eimy.yunpicturebackend.exception.BusinessException;
 import com.eimy.yunpicturebackend.exception.ErrorCode;
 import com.eimy.yunpicturebackend.manager.CosManager;
 import com.eimy.yunpicturebackend.model.dto.file.UploadPictureResult;
-import com.qcloud.cos.model.PutObjectResult;
-import com.qcloud.cos.model.ciModel.persistence.CIObject;
-import com.qcloud.cos.model.ciModel.persistence.ImageInfo;
-import com.qcloud.cos.model.ciModel.persistence.ProcessResults;
 import lombok.extern.slf4j.Slf4j;
+
 import javax.annotation.Resource;
 import java.io.File;
 import java.util.Date;
@@ -177,3 +177,16 @@ public abstract class PictureUploadTemplate {
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+

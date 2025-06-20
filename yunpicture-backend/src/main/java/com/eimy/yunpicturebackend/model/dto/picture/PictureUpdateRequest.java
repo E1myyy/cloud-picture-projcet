@@ -4,8 +4,10 @@ import lombok.Data;
 
 import java.io.Serializable;
 import java.util.List;
-//图片更新请求，给管理员使用。注意要将 tags 的类型改为 List<String>，便于前端上传：
 
+/**
+ * 图片更新请求
+ */
 @Data
 public class PictureUpdateRequest implements Serializable {
 
@@ -36,4 +38,3 @@ public class PictureUpdateRequest implements Serializable {
 
     private static final long serialVersionUID = 1L;
 }
-

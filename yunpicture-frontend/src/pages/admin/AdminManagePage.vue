@@ -171,62 +171,91 @@
       </a-tab-pane>
 
       <!--空间管理标签页-->
-      <a-tab-pane key="space" tab="空间管理">
-        <h2 style="margin-bottom: 16px">空间管理</h2>
-        <!-- 搜索表单 -->
-        <a-form layout="inline" :model="searchParams_Space" @finish="doSearch_Space">
-          <a-form-item label="空间名称">
-            <a-input v-model:value="searchParams_Space.spaceName" placeholder="请输入空间名称" allow-clear />
-          </a-form-item>
-          <a-form-item name="spaceLevel" label="空间级别">
-            <a-select
-              v-model:value="searchParams_Space.spaceLevel"
-              style="min-width: 180px"
-              placeholder="请选择空间级别"
-              :options="SPACE_LEVEL_OPTIONS"
-              allow-clear
-            />
-          </a-form-item>
-          <a-form-item label="用户 id">
-            <a-input v-model:value="searchParams_Space.userId" placeholder="请输入用户 id" allow-clear />
-          </a-form-item>
-          <a-form-item>
-            <a-button type="primary" html-type="submit">搜索</a-button>
-          </a-form-item>
-        </a-form>
-        <div style="margin-bottom: 16px" />
-        <!-- 表格 -->
-        <a-table
-          :columns="columns_Space"
-          :data-source="dataList_Space"
-          :pagination="pagination_Space"
-          @change="doTableChange_Space"
-        >
-          <template #bodyCell="{ column, record }">
-            <template v-if="column.dataIndex === 'spaceLevel'">
-              <div>{{ SPACE_LEVEL_MAP[record.spaceLevel] }}</div>
+        <a-tab-pane key="space" tab="空间管理">
+          <a-flex justify="space-between" style="margin-bottom: 16px">
+            <h2>空间管理</h2>
+            <a-space>
+              <a-button type="primary" href="/add_space" target="_blank">+ 创建空间</a-button>
+              <a-button type="primary" ghost href="/space_analyze?queryPublic=1" target="_blank"
+              >分析公共图库</a-button
+              >
+              <a-button type="primary" ghost href="/space_analyze?queryAll=1" target="_blank"
+              >分析全部空间</a-button
+              >
+            </a-space>
+          </a-flex>
+          <!-- 搜索表单 -->
+          <a-form layout="inline" :model="searchParams_Space" @finish="doSearch_Space">
+            <a-form-item label="空间名称">
+              <a-input v-model:value="searchParams_Space.spaceName" placeholder="请输入空间名称" allow-clear />
+            </a-form-item>
+            <a-form-item name="spaceLevel" label="空间级别">
+              <a-select
+                v-model:value="searchParams_Space.spaceLevel"
+                style="min-width: 180px"
+                placeholder="请选择空间级别"
+                :options="SPACE_LEVEL_OPTIONS"
+                allow-clear
+              />
+            </a-form-item>
+            <!-- 新增空间类别搜索 -->
+            <a-form-item label="空间类别" name="spaceType">
+              <a-select
+                v-model:value="searchParams_Space.spaceType"
+                :options="SPACE_TYPE_OPTIONS"
+                placeholder="请选择空间类别"
+                style="min-width: 180px"
+                allow-clear
+              />
+            </a-form-item>
+            <a-form-item label="用户 id">
+              <a-input v-model:value="searchParams_Space.userId" placeholder="请输入用户 id" allow-clear />
+            </a-form-item>
+            <a-form-item>
+              <a-button type="primary" html-type="submit">搜索</a-button>
+            </a-form-item>
+          </a-form>
+          <div style="margin-bottom: 16px" />
+          <!-- 表格 -->
+          <a-table
+            :columns="columns_Space"
+            :data-source="dataList_Space"
+            :pagination="pagination_Space"
+            @change="doTableChange_Space"
+          >
+            <template #bodyCell="{ column, record }">
+              <template v-if="column.dataIndex === 'spaceLevel'">
+                <div>{{ SPACE_LEVEL_MAP[record.spaceLevel] }}</div>
+              </template>
+              <!-- 新增空间类别展示 -->
+              <template v-if="column.dataIndex === 'spaceType'">
+                <a-tag>{{ SPACE_TYPE_MAP[record.spaceType] }}</a-tag>
+              </template>
+              <template v-if="column.dataIndex === 'spaceUseInfo'">
+                <div>大小：{{ formatSize(record.totalSize) }} / {{ formatSize(record.maxSize) }}</div>
+                <div>数量：{{ record.totalCount }} / {{ record.maxCount }}</div>
+              </template>
+              <template v-if="column.dataIndex === 'createTime'">
+                {{ dayjs(record.createTime).format('YYYY-MM-DD HH:mm:ss') }}
+              </template>
+              <template v-if="column.dataIndex === 'editTime'">
+                {{ dayjs(record.editTime).format('YYYY-MM-DD HH:mm:ss') }}
+              </template>
+              <template v-else-if="column.key === 'action'">
+                <a-space wrap>
+                  <!-- 新增分析按钮 -->
+                  <a-button type="link" :href="`/space_analyze?spaceId=${record.id}`" target="_blank">
+                    分析
+                  </a-button>
+                  <a-button type="link" :href="`/add_space?id=${record.id}`" target="_blank">
+                    编辑
+                  </a-button>
+                  <a-button danger @click="doDelete_Space(record.id)">删除</a-button>
+                </a-space>
+              </template>
             </template>
-            <template v-if="column.dataIndex === 'spaceUseInfo'">
-              <div>大小：{{ formatSize(record.totalSize) }} / {{ formatSize(record.maxSize) }}</div>
-              <div>数量：{{ record.totalCount }} / {{ record.maxCount }}</div>
-            </template>
-            <template v-if="column.dataIndex === 'createTime'">
-              {{ dayjs(record.createTime).format('YYYY-MM-DD HH:mm:ss') }}
-            </template>
-            <template v-if="column.dataIndex === 'editTime'">
-              {{ dayjs(record.editTime).format('YYYY-MM-DD HH:mm:ss') }}
-            </template>
-            <template v-else-if="column.key === 'action'">
-              <a-space wrap>
-                <a-button type="link" :href="`/add_space?id=${record.id}`" target="_blank">
-                  编辑
-                </a-button>
-                <a-button danger @click="doDelete_Space(record.id)">删除</a-button>
-              </a-space>
-            </template>
-          </template>
-        </a-table>
-      </a-tab-pane>
+          </a-table>
+        </a-tab-pane>
       </a-tabs>
     </a-card>
   </div>
@@ -244,7 +273,12 @@ import {
 } from '../../api/userController'
 import dayjs from 'dayjs'
 import {PIC_REVIEW_STATUS_ENUM, PIC_REVIEW_STATUS_MAP, PIC_REVIEW_STATUS_OPTIONS} from '../../constants/picture.ts'
-import {SPACE_LEVEL_MAP, SPACE_LEVEL_OPTIONS} from "@/constants/space.ts";
+import {
+  SPACE_LEVEL_MAP,
+  SPACE_LEVEL_OPTIONS,
+  SPACE_TYPE_MAP,
+  SPACE_TYPE_OPTIONS
+} from '@/constants/space.ts';
 import {formatSize} from "@/utils";
 import { computed, onMounted, reactive, ref } from 'vue'
 import { deleteSpaceUsingPost, listSpaceByPageUsingPost } from '@/api/spaceController.ts'
@@ -489,6 +523,11 @@ const columns_Space = [
     title: '空间级别',
     dataIndex: 'spaceLevel',
   },
+  // 新增空间类别列
+  {
+    title: '空间类别',
+    dataIndex: 'spaceType',
+  },
   {
     title: '使用情况',
     dataIndex: 'spaceUseInfo',
@@ -520,6 +559,8 @@ const searchParams_Space = reactive<API.SpaceQueryRequest>({
   pageSize: 10,
   sortField: 'createTime',
   sortOrder: 'descend',
+  // 新增空间类别搜索字段
+  spaceType: undefined,
 })
 // 获取数据
 const fetchData_Space = async () => {

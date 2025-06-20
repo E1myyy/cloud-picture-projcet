@@ -1,68 +1,37 @@
-import { defineStore } from "pinia";
-import { ref } from "vue";
+import { ref } from 'vue'
+import { defineStore } from 'pinia'
 import { getLoginUserUsingGet } from '@/api/userController.ts'
 
-// export const useLoginUserStore = defineStore("loginUser", () => {
-//   const loginUser = ref<API.LoginUserVO>({
-//       userName: '未登录',
-//       userRole: '', // 必须包含该字段
-//     });
-//
-//   async function fetchLoginUser() {
-//     const res = await getLoginUserUsingGet()
-//     if (res.data.code === 0 && res.data.data) {
-//       loginUser.value = res.data.data
-//     }
-//   }
-//
-//   function setLoginUser(newLoginUser: any) {
-//     loginUser.value = newLoginUser;
-//   }
-//
-//   function clearUserData() {
-//     loginUser.value = {
-//       userName: '未登录',
-//       userRole: '', // 重置角色信息
-//       // 其他字段重置...
-//     }
-//   }
-//
-//   return { loginUser, setLoginUser, fetchLoginUser };
-// });
-export const useLoginUserStore = defineStore("loginUser", () => {
+/**
+ * 存储登录用户信息的状态
+ */
+export const useLoginUserStore = defineStore('loginUser', () => {
   const loginUser = ref<API.LoginUserVO>({
     userName: '未登录',
-    userRole: '', // 必须包含该字段
-  });
+  })
 
+  /**
+   * 远程获取登录用户信息
+   */
   async function fetchLoginUser() {
     const res = await getLoginUserUsingGet()
     if (res.data.code === 0 && res.data.data) {
       loginUser.value = res.data.data
     }
+    // // 测试用户登录，3 秒后自动登录
+    // setTimeout(() => {
+    //   loginUser.value = { userName: '测试用户', id: 1 }
+    // }, 3000)
   }
 
+  /**
+   * 设置登录用户
+   * @param newLoginUser
+   */
   function setLoginUser(newLoginUser: any) {
-    loginUser.value = newLoginUser;
+    loginUser.value = newLoginUser
   }
 
-  function clearUserData() {
-    loginUser.value = {
-      userName: '未登录',
-      userRole: '',  // 确保清空角色信息
-      userAvatar: '',
-      id: undefined,
-    }
-    localStorage.removeItem('loginUser') // 清除本地存储
-  }
-
-  return {
-    loginUser,
-    setLoginUser,
-    fetchLoginUser,
-    clearUserData // 确保导出该方法
-  }
+  // 返回
+  return { loginUser, fetchLoginUser, setLoginUser }
 })
-
-
-

@@ -1,15 +1,12 @@
-import axios from 'axios'
-import { message } from 'ant-design-vue'
+import axios from "axios";
+import {message} from "ant-design-vue";
 
 // 创建 Axios 实例
-// 如果不写这个 withCredentials 前端就不会携带 cookie ，会出现前端已经登录但是后端不认的情况
-
 const myAxios = axios.create({
-  //踩坑：需要和后端的端口保持一致并且后端需要同时运行
   baseURL: 'http://localhost:8081',
   timeout: 60000,
   withCredentials: true,
-})
+});
 
 // 全局请求拦截器
 myAxios.interceptors.request.use(
@@ -47,4 +44,4 @@ myAxios.interceptors.response.use(
   },
 )
 
-export default myAxios
+export default myAxios;

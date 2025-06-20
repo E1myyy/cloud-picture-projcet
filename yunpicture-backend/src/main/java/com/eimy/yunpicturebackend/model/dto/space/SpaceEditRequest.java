@@ -4,6 +4,9 @@ import lombok.Data;
 
 import java.io.Serializable;
 
+/**
+ * 编辑空间请求
+ */
 @Data
 public class SpaceEditRequest implements Serializable {
 
@@ -19,4 +22,3 @@ public class SpaceEditRequest implements Serializable {
 
     private static final long serialVersionUID = 1L;
 }
-

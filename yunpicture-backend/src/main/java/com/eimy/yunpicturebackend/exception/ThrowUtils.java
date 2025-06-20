@@ -1,5 +1,8 @@
 package com.eimy.yunpicturebackend.exception;
 
+/**
+ * 异常处理工具类
+ */
 public class ThrowUtils {
 
     /**
@@ -29,10 +32,10 @@ public class ThrowUtils {
      *
      * @param condition 条件
      * @param errorCode 错误码
-     * @param message   错误信息
+     * @param message 错误信息
      */
     public static void throwIf(boolean condition, ErrorCode errorCode, String message) {
         throwIf(condition, new BusinessException(errorCode, message));
     }
-}
 
+}

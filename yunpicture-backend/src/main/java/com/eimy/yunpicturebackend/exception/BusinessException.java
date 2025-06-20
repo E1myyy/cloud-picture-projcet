@@ -1,8 +1,10 @@
 package com.eimy.yunpicturebackend.exception;
 
-
 import lombok.Getter;
 
+/**
+ * 自定义业务异常
+ */
 @Getter
 public class BusinessException extends RuntimeException {
 
@@ -27,4 +29,3 @@ public class BusinessException extends RuntimeException {
     }
 
 }
-

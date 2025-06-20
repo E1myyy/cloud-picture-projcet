@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @MapperScan("com.eimy.yunpicturebackend.mapper")
-public class MyBatisPlusConfig {
+public class MybatisPlusConfig {
 
     /**
      * 拦截器配置
@@ -24,4 +24,3 @@ public class MyBatisPlusConfig {
         return interceptor;
     }
 }
-

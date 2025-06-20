@@ -1,5 +1,8 @@
 package com.eimy.yunpicturebackend.controller;
 
+import com.qcloud.cos.model.COSObject;
+import com.qcloud.cos.model.COSObjectInputStream;
+import com.qcloud.cos.utils.IOUtils;
 import com.eimy.yunpicturebackend.annotation.AuthCheck;
 import com.eimy.yunpicturebackend.common.BaseResponse;
 import com.eimy.yunpicturebackend.common.ResultUtils;
@@ -7,9 +10,6 @@ import com.eimy.yunpicturebackend.constant.UserConstant;
 import com.eimy.yunpicturebackend.exception.BusinessException;
 import com.eimy.yunpicturebackend.exception.ErrorCode;
 import com.eimy.yunpicturebackend.manager.CosManager;
-import com.qcloud.cos.model.COSObject;
-import com.qcloud.cos.model.COSObjectInputStream;
-import com.qcloud.cos.utils.IOUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -23,13 +23,14 @@ import java.io.IOException;
 @RestController
 @RequestMapping("/file")
 public class FileController {
+
     @Resource
     private CosManager cosManager;
 
     /**
      * 测试文件上传
      *
-     * @param multipartFile 上传的文件
+     * @param multipartFile
      * @return
      */
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
@@ -44,10 +45,10 @@ public class FileController {
             file = File.createTempFile(filepath, null);
             multipartFile.transferTo(file);
             cosManager.putObject(filepath, file);
-            // 返回可访问地址
+            // 返回可访问的地址
             return ResultUtils.success(filepath);
         } catch (Exception e) {
-            log.error("file upload error, filepath = {}", filepath, e);
+            log.error("file upload error, filepath = " + filepath, e);
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "上传失败");
         } finally {
             if (file != null) {
@@ -59,8 +60,6 @@ public class FileController {
             }
         }
     }
-
-
 
     /**
      * 测试文件下载
@@ -75,7 +74,6 @@ public class FileController {
         try {
             COSObject cosObject = cosManager.getObject(filepath);
             cosObjectInput = cosObject.getObjectContent();
-            // 处理下载到的流
             byte[] bytes = IOUtils.toByteArray(cosObjectInput);
             // 设置响应头
             response.setContentType("application/octet-stream;charset=UTF-8");
@@ -87,12 +85,18 @@ public class FileController {
             log.error("file download error, filepath = " + filepath, e);
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "下载失败");
         } finally {
+            // 释放流
             if (cosObjectInput != null) {
                 cosObjectInput.close();
             }
         }
-    }
 
+    }
 }
+
+
+
+
+
 
 

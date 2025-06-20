@@ -60,55 +60,24 @@
               </a-space>
             </a-descriptions-item>
           </a-descriptions>
-          <!--审核按钮行-->
-          <div style="display: flex; flex-direction: column; gap: 16px">
-            <a-space v-if="(picture.userId)">
-              <a-button
-                v-if="canAdminEdit"
-                :icon="h(CheckCircleOutlined)"
-                type="default"
-                @click="handleReview(picture, PIC_REVIEW_STATUS_ENUM.PASS)"
-              >
-                审核通过
-              </a-button>
-              <a-button
-                v-if="canAdminEdit"
-                :icon="h(CloseCircleOutlined)"
-                type="default"
-                danger
-                @click="handleReview(picture, PIC_REVIEW_STATUS_ENUM.REJECT)"
-              >
-                审核不通过
-              </a-button>
-            </a-space>
-            <!-- 编辑和删除按钮行 -->
-            <a-space>
-              <a-button v-if="canEdit" :icon="h(EditOutlined)" type="default" @click="doEdit">
-                编辑
-              </a-button>
-              <a-popconfirm
-                v-if="canEdit"
-                title="确定删除当前图片？"
-                ok-text="是"
-                cancel-text="否"
-                @confirm="doDelete"
-              >
-                <a-button type="link" danger :icon="h(DeleteOutlined)">删除</a-button>
-              </a-popconfirm>
-            </a-space>
-            <!-- 下载按钮行 -->
-            <a-space>
-              <a-button type="primary" @click="doDownload">
-                免费下载
-                <template #icon>
-                  <DownloadOutlined />
-                </template>
-              </a-button>
-              <a-button :icon="h(ShareAltOutlined)" type="primary" ghost @click="doShare">
-                分享
-              </a-button>
-            </a-space>
-          </div>
+          <!-- 图片操作 -->
+          <a-space wrap>
+            <a-button type="primary" @click="doDownload">
+              免费下载
+              <template #icon>
+                <DownloadOutlined />
+              </template>
+            </a-button>
+            <a-button :icon="h(ShareAltOutlined)" type="primary" ghost @click="doShare">
+              分享
+            </a-button>
+            <a-button v-if="canEdit" :icon="h(EditOutlined)" type="default" @click="doEdit">
+              编辑
+            </a-button>
+            <a-button v-if="canDelete" :icon="h(DeleteOutlined)" danger @click="doDelete">
+              删除
+            </a-button>
+          </a-space>
         </a-card>
       </a-col>
     </a-row>
@@ -117,27 +86,19 @@
 </template>
 
 <script setup lang="ts">
-import {computed, h, onMounted, reactive, ref} from 'vue'
-import {
-  deletePictureUsingPost,
-  doPictureReviewUsingPost,
-  getPictureVoByIdUsingGet,
-  listPictureByPageUsingPost
-} from '@/api/pictureController.ts'
+import { computed, h, onMounted, ref } from 'vue'
+import { deletePictureUsingPost, getPictureVoByIdUsingGet } from '@/api/pictureController.ts'
 import { message } from 'ant-design-vue'
 import {
   DeleteOutlined,
   DownloadOutlined,
   EditOutlined,
   ShareAltOutlined,
-  CloseCircleOutlined,
-  CheckCircleOutlined
 } from '@ant-design/icons-vue'
-import { useLoginUserStore } from '@/stores/useLoginUserStore.ts'
 import { useRouter } from 'vue-router'
-import { downloadImage, formatSize } from '@/utils'
+import { downloadImage, formatSize, toHexColor } from '@/utils'
 import ShareModal from '@/components/ShareModal.vue'
-import {PIC_REVIEW_STATUS_ENUM} from "@/constants/picture.ts";
+import { SPACE_PERMISSION_ENUM } from '@/constants/space.ts'
 
 interface Props {
   id: string | number
@@ -146,69 +107,16 @@ interface Props {
 const props = defineProps<Props>()
 const picture = ref<API.PictureVO>({})
 
-const loginUserStore = useLoginUserStore()
-
-//审核操作
-const handleReview = async (picture: API.PictureVO, reviewStatus: number) => {
-  const reviewMessage = reviewStatus === PIC_REVIEW_STATUS_ENUM.PASS ? '管理员操作通过' : '管理员操作拒绝'
-  const res = await doPictureReviewUsingPost({
-    id: picture.id,
-    reviewStatus,
-    reviewMessage,
+// 通用权限检查函数
+function createPermissionChecker(permission: string) {
+  return computed(() => {
+    return (picture.value.permissionList ?? []).includes(permission)
   })
-  if (res.data.code === 0) {
-    message.success('审核操作成功')
-    // 重新获取列表
-    fetchData()
-  } else {
-    message.error('审核操作失败，' + res.data.message)
-  }
-}
-// 数据
-const dataList = ref<API.PictureVO[]>([])
-const total = ref(0)
-// 搜索条件
-// 确保分页参数命名正确
-const searchParams = reactive<API.PictureQueryRequest>({
-  current: 1,
-  pageSize: 10,
-  sortField: 'createTime',
-  sortOrder: 'ascend',
-})
-// 获取数据
-const fetchData = async () => {
-  const res = await listPictureByPageUsingPost({
-    ...searchParams,
-  })
-  if (res.data.data) {
-    dataList.value = res.data.data.records ?? []
-    total.value = res.data.data.total ?? 0
-  } else {
-    message.error('获取数据失败，' + res.data.message)
-  }
 }
 
-// 是否具有编辑权限
-const canEdit = computed(() => {
-  const loginUser = loginUserStore.loginUser
-  // 未登录不可编辑
-  if (!loginUser.id) {
-    return false
-  }
-  // 仅本人或管理员可编辑
-  const user = picture.value.user || {}
-  return loginUser.id === user.id || loginUser.userRole === 'admin'
-})
-
-const canAdminEdit = computed(() => {
-  const loginUser = loginUserStore.loginUser
-  // 未登录不可编辑
-  if (!loginUser.id) {
-    return false
-  }
-  // 管理员可编辑
-  return loginUser.userRole === 'admin'
-})
+// 定义权限检查
+const canEdit = createPermissionChecker(SPACE_PERMISSION_ENUM.PICTURE_EDIT)
+const canDelete = createPermissionChecker(SPACE_PERMISSION_ENUM.PICTURE_DELETE)
 
 // 获取图片详情
 const fetchPictureDetail = async () => {
@@ -273,7 +181,6 @@ const doShare = () => {
     shareModalRef.value.openModal()
   }
 }
-
 </script>
 
 <style scoped>

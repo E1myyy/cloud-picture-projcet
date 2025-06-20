@@ -27,11 +27,6 @@ public class GetImagePageUrlApi {
      * @return
      */
     public static String getImagePageUrl(String imageUrl) {
-        // image: https%3A%2F%2Fwww.codefather.cn%2Flogo.png
-        //tn: pc
-        //from: pc
-        //image_source: PC_UPLOAD_URL
-        //sdkParams:
         // 1. 准备请求参数
         Map<String, Object> formData = new HashMap<>();
         formData.put("image", imageUrl);

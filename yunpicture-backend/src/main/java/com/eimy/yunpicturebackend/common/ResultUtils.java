@@ -3,7 +3,7 @@ package com.eimy.yunpicturebackend.common;
 import com.eimy.yunpicturebackend.exception.ErrorCode;
 
 /**
- * 对全局响应封装（BaseResponse）的封装
+ * 响应工具类
  */
 public class ResultUtils {
 
@@ -49,4 +49,3 @@ public class ResultUtils {
         return new BaseResponse<>(errorCode.getCode(), null, message);
     }
 }
-

@@ -5,11 +5,14 @@ import lombok.Data;
 import java.io.Serializable;
 import java.util.Date;
 
+/**
+ * 用户视图（脱敏）
+ */
 @Data
 public class UserVO implements Serializable {
 
     /**
-     * 用户 id
+     * id
      */
     private Long id;
 
@@ -43,7 +46,5 @@ public class UserVO implements Serializable {
      */
     private Date createTime;
 
-
     private static final long serialVersionUID = 1L;
 }
-

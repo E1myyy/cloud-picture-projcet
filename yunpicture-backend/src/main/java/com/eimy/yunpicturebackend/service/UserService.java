@@ -11,74 +11,82 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 /**
-* @author 路灯
-* @description 针对表【user(用户)】的数据库操作Service
-* @createDate 2025-04-20 14:40:56
-*/
+ * @author 路灯
+ * @description 针对表【user(用户)】的数据库操作Service
+ * @createDate 2025-04-20 14:40:56
+ */
 public interface UserService extends IService<User> {
-    /**
-     * 用户注册校验
-     * @param userAccount
-     * @param userPassword
-     * @param checkPassword
-     * @return
-     */
-    long UserRegister(String userAccount, String userPassword, String checkPassword);
 
     /**
-     * 用户密码加密
+     * 用户注册
+     *
+     * @param userAccount   用户账户
+     * @param userPassword  用户密码
+     * @param checkPassword 校验密码
+     * @return 新用户 id
+     */
+    long userRegister(String userAccount, String userPassword, String checkPassword);
+
+    /**
+     * 用户登录
+     *
+     * @param userAccount  用户账户
+     * @param userPassword 用户密码
+     * @param request
+     * @return 脱敏后的用户信息
+     */
+    LoginUserVO userLogin(String userAccount, String userPassword, HttpServletRequest request);
+
+    /**
+     * 获取加密后的密码
+     *
      * @param userPassword
      * @return
      */
     String getEncryptPassword(String userPassword);
 
     /**
-     * 用户登录
-     * @param userAccount
-     * @param userPassword
-     * @return
-     */
-    LoginUserVO userLogin(String userAccount, String userPassword, HttpServletRequest request);
-
-    /**
-     * 请求获得用户脱敏后的登录信息
-     * @param user
-     * @return
-     */
-    LoginUserVO getLoginUserVO(User user);
-
-    /**
-     * 请求获得用户脱敏后的登录信息
-     * @param user
-     * @return
-     */
-    UserVO getUserVO(User user);
-
-    /**
-     * 获取脱敏后的用户列表
-     * @param userList
-     * @return
-     */
-    List<UserVO> getUserVOList(List<User> userList);
-
-    /**
-     * 获取当前登录用户信息
+     * 获取当前登录用户
+     *
      * @param request
      * @return
      */
     User getLoginUser(HttpServletRequest request);
 
     /**
-     * 用户登录态注销
+     * 获得脱敏后的登录用户信息
+     *
+     * @param user
+     * @return
+     */
+    LoginUserVO getLoginUserVO(User user);
+
+    /**
+     * 获得脱敏后的用户信息
+     *
+     * @param user
+     * @return
+     */
+    UserVO getUserVO(User user);
+
+    /**
+     * 获得脱敏后的用户信息列表
+     *
+     * @param userList
+     * @return 脱敏后的用户列表
+     */
+    List<UserVO> getUserVOList(List<User> userList);
+
+    /**
+     * 用户注销
      *
      * @param request
      * @return
      */
-    boolean userLogOut(HttpServletRequest request);
+    boolean userLogout(HttpServletRequest request);
 
     /**
-     * 查询用户列表
-     *
+     * 获取查询条件
      * @param userQueryRequest
      * @return
      */
@@ -91,6 +99,4 @@ public interface UserService extends IService<User> {
      * @return
      */
     boolean isAdmin(User user);
-
-
 }
